@@ -1,0 +1,10 @@
+name: MSiege
+version: ${project.version}
+main: red.man10.msiege.MSiege
+authors: [Mr_IK]
+description: Man10 Siege Plugin
+commands:
+  msi:
+    description: MSiege
+    usage: /<command>
+    default: op
