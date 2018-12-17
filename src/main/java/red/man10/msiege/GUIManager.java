@@ -6,11 +6,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import red.man10.msiege.util.InvListener;
 import red.man10.msiege.util.InventoryAPI;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class GUIManager implements Listener {
@@ -41,6 +43,12 @@ public class GUIManager implements Listener {
                 inv.clear();
                 inv.allListenerRegist((Player)e.getWhoClicked());
                 //ここにショップのことをかくぅー
+            }
+            @EventHandler
+            public void onClose(InventoryCloseEvent e){
+                if(checkUnique()) {
+                    super.unregister();
+                }
             }
         });
         inv.setItem(13,inv.createUnbitem("§7§lカード管理",
@@ -82,6 +90,12 @@ public class GUIManager implements Listener {
                 e.getWhoClicked().closeInventory();
                 Bukkit.dispatchCommand(e.getWhoClicked(),"msi stats");
             }
+            @EventHandler
+            public void onClose(InventoryCloseEvent e){
+                if(checkUnique()) {
+                    super.unregister();
+                }
+            }
         });
         inv.openInv(p);
     }
@@ -97,14 +111,26 @@ public class GUIManager implements Listener {
                     return;
                 }
                 e.setCancelled(true);
-                settingPage(p,1);
+                settingPage(null,p,1);
+            }
+            @EventHandler
+            public void onClose(InventoryCloseEvent e){
+                if(checkUnique()) {
+                    super.unregister();
+                }
             }
         });
         inv.allListenerRegist(p);
     }
 
-    public void settingPage(Player p,int page){
-        InventoryAPI inv = new InventoryAPI(data.plugin,"§d§lM§7§lSiege §3§lカード設定"+page,54);
+    public void settingPage(InventoryAPI inv,Player p,int page){
+        boolean invnull = false;
+        if(inv == null){
+            invnull = true;
+            inv = new InventoryAPI(data.plugin,"§d§lM§7§lSiege §3§lカード設定"+page,54);
+        }else{
+            inv.regenerateID();
+        }
         inv.clear();
         //ここに設定のことをかくぅー
         int pos = 0;
@@ -122,7 +148,7 @@ public class GUIManager implements Listener {
             ItemStack item = cards.item.get(0);
             ItemMeta meta = item.getItemMeta();
             meta.setDisplayName("§f"+cards.name);
-            List<String> lore = cards.lore;
+            List<String> lore = new ArrayList<>(cards.lore);
             lore.add("§e===================");
             lore.add("§a左クリックでセット");
             lore.add("§c右クリックでアンセットします！");
@@ -132,6 +158,7 @@ public class GUIManager implements Listener {
                 lore.add("§cこのカードはセットされていません！");
             }
             meta.setLore(lore);
+            item.setItemMeta(meta);
             inv.setItem(pos,item);
             pos++;
             if(pos==44){
@@ -147,7 +174,8 @@ public class GUIManager implements Listener {
         if(pos!=44){
             inv.setItem(53,new ItemStack(Material.STAINED_GLASS_PANE,1,(short)7));
         }
-        inv.addOriginalListing(new InvListener(data.plugin,inv) {
+        InventoryAPI finalInv = inv;
+        inv.addOriginalListing(new InvListener(data.plugin, finalInv) {
             @EventHandler
             public void onClick(InventoryClickEvent e) {
                 if (!super.ClickCheck(e)) {
@@ -158,13 +186,13 @@ public class GUIManager implements Listener {
                     if(e.getInventory().getItem(45).getType()!=Material.DIAMOND_HOE){
                         return;
                     }
-                    settingPage(p,page-1);
+                    settingPage(finalInv,p,page-1);
                     return;
                 }else if(e.getSlot()==53){
                     if(e.getInventory().getItem(53).getType()!=Material.DIAMOND_HOE){
                         return;
                     }
-                    settingPage(p,page+1);
+                    settingPage(finalInv,p,page+1);
                     return;
                 }
                 if(e.getClick().isLeftClick()) {
@@ -173,8 +201,18 @@ public class GUIManager implements Listener {
                     Bukkit.dispatchCommand(e.getWhoClicked(), "msi cardunset " + e.getInventory().getItem(e.getSlot()).getItemMeta().getDisplayName().replaceFirst("§f", ""));
                 }
             }
+            @EventHandler
+            public void onClose(InventoryCloseEvent e){
+                if(checkUnique()) {
+                    super.unregister();
+                }
+            }
         });
-        inv.openInv(p);
+        if(invnull) {
+            inv.openInv(p);
+        }else{
+            inv.allListenerRegist(p);
+        }
     }
 
     private void openDropping(InventoryAPI inv,Player p){
@@ -188,14 +226,26 @@ public class GUIManager implements Listener {
                     return;
                 }
                 e.setCancelled(true);
-                droppingPage(p,1);
+                droppingPage(null,p,1);
+            }
+            @EventHandler
+            public void onClose(InventoryCloseEvent e){
+                if(checkUnique()) {
+                    super.unregister();
+                }
             }
         });
         inv.allListenerRegist(p);
     }
 
-    public void droppingPage(Player p,int page){
-        InventoryAPI inv = new InventoryAPI(data.plugin,"§d§lM§7§lSiege §8§lゴミ捨て場"+page,54);
+    public void droppingPage(InventoryAPI inv,Player p,int page){
+        boolean invnull = false;
+        if(inv == null){
+            invnull = true;
+            inv = new InventoryAPI(data.plugin,"§d§lM§7§lSiege §8§lゴミ捨て場"+page,54);
+        }else{
+            inv.regenerateID();
+        }
         inv.clear();
         //ここに設定のことをかくぅー
         int pos = 0;
@@ -222,6 +272,7 @@ public class GUIManager implements Listener {
                 lore.add("§cこのカードはセットされていません");
             }
             meta.setLore(lore);
+            item.setItemMeta(meta);
             inv.setItem(pos,item);
             pos++;
             if(pos==44){
@@ -237,7 +288,8 @@ public class GUIManager implements Listener {
         if(pos!=44){
             inv.setItem(53,new ItemStack(Material.STAINED_GLASS_PANE,1,(short)7));
         }
-        inv.addOriginalListing(new InvListener(data.plugin,inv) {
+        InventoryAPI finalInv = inv;
+        inv.addOriginalListing(new InvListener(data.plugin, finalInv) {
             @EventHandler
             public void onClick(InventoryClickEvent e) {
                 if (!super.ClickCheck(e)) {
@@ -248,19 +300,30 @@ public class GUIManager implements Listener {
                     if(e.getInventory().getItem(45).getType()!=Material.DIAMOND_HOE){
                         return;
                     }
-                    settingPage(p,page-1);
+                    settingPage(finalInv,p,page-1);
                     return;
                 }else if(e.getSlot()==53){
                     if(e.getInventory().getItem(53).getType()!=Material.DIAMOND_HOE){
                         return;
                     }
-                    settingPage(p,page+1);
+                    settingPage(finalInv,p,page+1);
                     return;
                 }
                 Bukkit.dispatchCommand(e.getWhoClicked(), "msi carddrop " + e.getInventory().getItem(e.getSlot()).getItemMeta().getDisplayName().replaceFirst("§f", ""));
             }
+
+            @EventHandler
+            public void onClose(InventoryCloseEvent e){
+                if(checkUnique()) {
+                    super.unregister();
+                }
+            }
         });
-        inv.openInv(p);
+        if(invnull) {
+            inv.openInv(p);
+        }else{
+            inv.allListenerRegist(p);
+        }
     }
 
 

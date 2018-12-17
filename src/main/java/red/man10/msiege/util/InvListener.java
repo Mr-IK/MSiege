@@ -27,9 +27,17 @@ public abstract class InvListener implements Listener {
         if(e.getClickedInventory().equals(e.getWhoClicked().getInventory())){
             return false;
         }
-        if(!e.getWhoClicked().getUniqueId().equals(player)){
+        if(player==null||!e.getWhoClicked().getUniqueId().equals(player)){
             return false;
         }
+        return checkUnique();
+    }
+
+    public boolean checkUnique(){
         return inv.getName().contains(unique);
+    }
+
+    public void unregister(){
+        this.player = null;
     }
 }
