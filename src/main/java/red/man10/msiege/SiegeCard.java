@@ -22,7 +22,7 @@ public class SiegeCard {
     SiegeData data;
 
     enum CardType{
-        item,command,craft
+        item,command
     }
 
     public SiegeCard(SiegeData data,String name,boolean noload){

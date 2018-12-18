@@ -4,3 +4,6 @@ mysql:
   user: root
   pass: password
   db: man10market
+
+shop:
+- 'armor = 10'

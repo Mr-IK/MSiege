@@ -8,3 +8,11 @@ commands:
     description: MSiege
     usage: /<command>
     default: op
+  siege:
+    description: MSiege
+    usage: /<command>
+    default: op
+  tc:
+    description: MSiege
+    usage: /<command>
+    default: op

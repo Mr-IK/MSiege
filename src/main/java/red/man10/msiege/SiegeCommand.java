@@ -9,6 +9,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.block.Action;
+import red.man10.msiege.util.InventoryAPI;
 
 import java.util.*;
 
@@ -20,6 +21,7 @@ public class SiegeCommand implements CommandExecutor,Listener{
     HashMap<UUID,SiegeArena> arenasetup = new HashMap<>();
     HashMap<UUID,SiegeCard> cardsetup = new HashMap<>();
     HashMap<UUID,String> arenasetups = new HashMap<>();
+    HashMap<UUID,CraftData> craftsetup = new HashMap<>();
 
     public SiegeCommand(SiegeData data,String cmd){
         this.data = data;
@@ -98,7 +100,7 @@ public class SiegeCommand implements CommandExecutor,Listener{
                     p.sendMessage("§c/" + cmd + " card lore [lore1] [lore2] …: カードのloreを設定する");
                     p.sendMessage("§c/" + cmd + " card type item,command,craft : カードのタイプを設定する");
                     p.sendMessage("§c/" + cmd + " card additem : カードのアイテムを追加する");
-                    p.sendMessage("§c/" + cmd + " card clearitem : カードのアイテムを追加する");
+                    p.sendMessage("§c/" + cmd + " card clearitem : カードのアイテムをクリアする");
                     p.sendMessage("§c/" + cmd + " card setcost [数字]: カードのコストを設定する");
                     p.sendMessage("§c/" + cmd + " card arg [arg1] [arg2] [arg3] …: カードのargを設定する");
                     p.sendMessage("§c/" + cmd + " card save : カードを保存する");
@@ -109,6 +111,17 @@ public class SiegeCommand implements CommandExecutor,Listener{
                     p.sendMessage("§c/" + cmd + " cardset [カード名] : カードをセットします。");
                     p.sendMessage("§c/" + cmd + " carddrop [カード名] : カードを捨てます。");
                     p.sendMessage("§c/" + cmd + " cardunset [カード名] : カードをアンセットします。");
+                    p.sendMessage("§c-------------Shop関連-------------");
+                    p.sendMessage("§c/" + cmd + " shoprel : shopをリロードします。");
+                    p.sendMessage("§c/" + cmd + " addshop [name] [buy] : shopの品を追加します");
+                    p.sendMessage("§c-------------Craft関連-------------");
+                    p.sendMessage("§c/" + cmd + " craftrel : craftをリロードします。");
+                    p.sendMessage("§c/" + cmd + " craftnew [name] : craftをセットアップします");
+                    p.sendMessage("§c/" + cmd + " craft setitem: craftの発動アイテムをセットします");
+                    p.sendMessage("§c/" + cmd + " craft adduse: craftの材料をセットします");
+                    p.sendMessage("§c/" + cmd + " craft clearuse: craftの材料をリセットします");
+                    p.sendMessage("§c/" + cmd + " craft setresult: craftで得られるアイテムをセットします");
+                    p.sendMessage("§c/" + cmd + " craft save : craftをセーブ");
                 }
                 if (p.hasPermission("siege.forcestart")) {
                     p.sendMessage("§4------------Admin/Vip用-------------");
@@ -118,7 +131,52 @@ public class SiegeCommand implements CommandExecutor,Listener{
                 p.sendMessage("§a/" + cmd + " join [アリーナ名] : アリーナに参加");
                 p.sendMessage("§a/" + cmd + " leave : アリーナから抜ける");
                 p.sendMessage("§a/" + cmd + " list : アリーナのリスト");
+                p.sendMessage("§a/" + cmd + " stats : マイステータスを見る");
+                p.sendMessage("§e-----------ゲーム中-------------");
+                p.sendMessage("§a/" + cmd + " teamchest : チームのチェストを開く");
+                p.sendMessage("§a/" + cmd + " mychest : マイチェスト(エンチェス)を開く");
+                p.sendMessage("§a/" + cmd + " ib : アイテムバンクを開く");
+                p.sendMessage("§bCreated by Mr_IK");
+                p.sendMessage("§bBuildID: "+data.plugin.buildcode);
                 return true;
+            }else if(args[0].equalsIgnoreCase("teamchest")){
+                SiegeTeam team = data.tc.getTeam(p);
+                if(team == null){
+                    data.showMessage(p.getUniqueId().toString(),"§aゲームに参加していません");
+                    return true;
+                }
+                team.openteaminv(p);
+            }else if(args[0].equalsIgnoreCase("mychest")) {
+                SiegeTeam team = data.tc.getTeam(p);
+                if (team == null) {
+                    data.showMessage(p.getUniqueId().toString(), "§aゲームに参加していません");
+                    return true;
+                }
+                p.openInventory(p.getEnderChest());
+            }else if(args[0].equalsIgnoreCase("ib")) {
+                SiegeTeam team = data.tc.getTeam(p);
+                if (team == null) {
+                    data.showMessage(p.getUniqueId().toString(), "§aゲームに参加していません");
+                    return true;
+                }
+                gui.openItemBank(p, new InventoryAPI(data.plugin, "§d§lM§7§lSiege §3§lItemBank", 27),false);
+            }else if(args[0].equalsIgnoreCase("stats")){
+                p.sendMessage("§e------------"+p.getName()+"のステータス-------------");
+                PlayerStats stats = data.getStats(p.getUniqueId().toString());
+                data.showMessage(p.getUniqueId().toString(),"§aWin: "+stats.getWin());
+                data.showMessage(p.getUniqueId().toString(),"§cLose: "+stats.getLose());
+                data.showMessage(p.getUniqueId().toString(),"§aKill: "+stats.getKill());
+                data.showMessage(p.getUniqueId().toString(),"§cDeath: "+stats.getDeath());
+                data.showMessage(p.getUniqueId().toString(),"§eMatch: "+stats.getMatch());
+                data.showMessage(p.getUniqueId().toString(),"§ePoint: "+stats.getPoint());
+            }else if(args[0].equalsIgnoreCase("shoprel")){
+                if (!p.hasPermission("siege.setup")) {
+                    p.sendMessage(data.plugin.getPrefix() + "§cあなたには権限がありません！");
+                    return true;
+                }
+                data.plugin.reloadConfig();
+                data.plugin.config = data.plugin.getConfig();
+                data.showMessage(p.getUniqueId().toString(),"§ashopを再読み込みしました。");
             }
         }else if(args.length == 2){
             if(args[0].equalsIgnoreCase("create")){
@@ -132,6 +190,84 @@ public class SiegeCommand implements CommandExecutor,Listener{
                 }
                 arenasetup.put(p.getUniqueId(),new SiegeArena(data,args[1]));
                 data.showMessage(p.getUniqueId().toString(),"§aセットアップを開始しました。");
+            }else if(args[0].equalsIgnoreCase("craftnew")){
+                if (!p.hasPermission("siege.craft")) {
+                    p.sendMessage(data.plugin.getPrefix() + "§cあなたには権限がありません！");
+                    return true;
+                }
+                craftsetup.put(p.getUniqueId(),new CraftData(data,args[1]));
+                data.showMessage(p.getUniqueId().toString(),"§aセットアップを開始しました。");
+            }else if(args[0].equalsIgnoreCase("craft")){
+                if (!p.hasPermission("siege.craft")) {
+                    p.sendMessage(data.plugin.getPrefix() + "§cあなたには権限がありません！");
+                    return true;
+                }
+                if(args[1].equalsIgnoreCase("save")) {
+                    if(!craftsetup.containsKey(p.getUniqueId())){
+                        data.showMessage(p.getUniqueId().toString(),"§cセットアップ/再設定が開始されていません！ もしかして: /"+cmd+" craftnew");
+                        return true;
+                    }
+                    craftsetup.get(p.getUniqueId()).saveFile();
+                    craftsetup.remove(p.getUniqueId());
+                    data.showMessage(p.getUniqueId().toString(), "§aクラフトをセーブし、セットアップを終了しました。");
+                }else if(args[1].equalsIgnoreCase("adduse")) {
+                    if(!craftsetup.containsKey(p.getUniqueId())){
+                        data.showMessage(p.getUniqueId().toString(),"§cセットアップ/再設定が開始されていません！ もしかして: /"+cmd+" craftnew");
+                        return true;
+                    }
+                    if(p.getInventory().getItemInMainHand()==null){
+                        data.showMessage(p.getUniqueId().toString(), "§cアイテムを持ってください。");
+                        return true;
+                    }
+                    craftsetup.get(p.getUniqueId()).useitems.add( p.getInventory().getItemInMainHand());
+                    data.showMessage(p.getUniqueId().toString(), "§aクラフトの使用アイテムを追加しました。");
+                }else if(args[1].equalsIgnoreCase("setitem")) {
+                    if(!craftsetup.containsKey(p.getUniqueId())){
+                        data.showMessage(p.getUniqueId().toString(),"§cセットアップ/再設定が開始されていません！ もしかして: /"+cmd+" craftnew");
+                        return true;
+                    }
+                    if(p.getInventory().getItemInMainHand()==null){
+                        data.showMessage(p.getUniqueId().toString(), "§cアイテムを持ってください。");
+                        return true;
+                    }
+                    craftsetup.get(p.getUniqueId()).book = p.getInventory().getItemInMainHand();
+                    data.showMessage(p.getUniqueId().toString(), "§aクラフトの本をセットしました。");
+                }else if(args[1].equalsIgnoreCase("setresult")) {
+                    if(!craftsetup.containsKey(p.getUniqueId())){
+                        data.showMessage(p.getUniqueId().toString(),"§cセットアップ/再設定が開始されていません！ もしかして: /"+cmd+" craftnew");
+                        return true;
+                    }
+                    if(p.getInventory().getItemInMainHand()==null){
+                        data.showMessage(p.getUniqueId().toString(), "§cアイテムを持ってください。");
+                        return true;
+                    }
+                    craftsetup.get(p.getUniqueId()).result = p.getInventory().getItemInMainHand();
+                    data.showMessage(p.getUniqueId().toString(), "§aクラフトのリザルトをセットしました。");
+                }else if(args[1].equalsIgnoreCase("clearuse")) {
+                    if(!craftsetup.containsKey(p.getUniqueId())){
+                        data.showMessage(p.getUniqueId().toString(),"§cセットアップ/再設定が開始されていません！ もしかして: /"+cmd+" craftnew");
+                        return true;
+                    }
+                    craftsetup.get(p.getUniqueId()).useitems.clear();
+                    data.showMessage(p.getUniqueId().toString(), "§aクラフトの使用アイテムをクリアしました。");
+                }
+            }else if(args[0].equalsIgnoreCase("stats")){
+                if (!p.hasPermission("siege.otherstats")) {
+                    p.sendMessage(data.plugin.getPrefix() + "§cあなたには権限がありません！");
+                    return true;
+                }
+                if(Bukkit.getPlayer(args[1])==null||data.getStats(Bukkit.getPlayer(args[1]).getUniqueId().toString())==null){
+                    data.showMessage(p.getUniqueId().toString(),"§cそのプレイヤーはオフラインです！");
+                    return true;
+                }
+                p.sendMessage("§e------------"+args[1]+"のステータス-------------");
+                PlayerStats stats = data.getStats(p.getUniqueId().toString());
+                data.showMessage(p.getUniqueId().toString(),"§aWin: "+stats.getWin());
+                data.showMessage(p.getUniqueId().toString(),"§cLose: "+stats.getLose());
+                data.showMessage(p.getUniqueId().toString(),"§aKill: "+stats.getKill());
+                data.showMessage(p.getUniqueId().toString(),"§cDeath: "+stats.getDeath());
+                data.showMessage(p.getUniqueId().toString(),"§eMatch: "+stats.getMatch());
+                data.showMessage(p.getUniqueId().toString(),"§ePoint: "+stats.getPoint());
             }else if(args[0].equalsIgnoreCase("update")){
                 if (!p.hasPermission("siege.setup")) {
                     p.sendMessage(data.plugin.getPrefix() + "§cあなたには権限がありません！");
@@ -143,6 +279,7 @@ public class SiegeCommand implements CommandExecutor,Listener{
                 }
                 arenasetup.put(p.getUniqueId(),data.getArena(args[1]));
                 data.showMessage(p.getUniqueId().toString(),"§a再セットアップを開始しました。");
+
             }else if(args[0].equalsIgnoreCase("loc1")) {
                 if (!p.hasPermission("siege.setup")) {
                     p.sendMessage(data.plugin.getPrefix() + "§cあなたには権限がありません！");
@@ -229,15 +366,20 @@ public class SiegeCommand implements CommandExecutor,Listener{
                 }
                 data.gameJoin(args[1],p);
             }else if(args[0].equalsIgnoreCase("carddrop")){
-                if(!data.getStats(p.getUniqueId().toString()).getSelectcard().contains(args[1])) {
+                if(!data.getStats(p.getUniqueId().toString()).getHavecard().contains(args[1])) {
                     data.showMessage(p.getUniqueId().toString(), "§cこのカードは所持していません！");
                     return true;
                 }
                 data.getStats(p.getUniqueId().toString()).removehavecard(args[1]);
                 data.getStats(p.getUniqueId().toString()).removeselectcard(args[1]);
                 data.showMessage(p.getUniqueId().toString(),"§aカード「"+args[1]+"」を捨てました。");
+                data.getStats(p.getUniqueId().toString()).saveFile();
                 return true;
             }else if(args[0].equalsIgnoreCase("cardget")){
+                if (!p.hasPermission("siege.getcard")) {
+                    p.sendMessage(data.plugin.getPrefix() + "§cあなたには権限がありません！");
+                    return true;
+                }
                 if(data.cardlist().contains(args[1])){
                     if(data.getStats(p.getUniqueId().toString()).getHavecard().contains(args[1])){
                         data.showMessage(p.getUniqueId().toString(),"§cこのカードはすでに取得済みです！");
@@ -245,6 +387,7 @@ public class SiegeCommand implements CommandExecutor,Listener{
                     }
                     data.getStats(p.getUniqueId().toString()).addhavecard(args[1]);
                     data.showMessage(p.getUniqueId().toString(),"§aカード「"+args[1]+"」を取得しました。");
+                    data.getStats(p.getUniqueId().toString()).saveFile();
                     return true;
                 }
             }else if(args[0].equalsIgnoreCase("cardset")){
@@ -258,6 +401,7 @@ public class SiegeCommand implements CommandExecutor,Listener{
                     }
                     data.getStats(p.getUniqueId().toString()).addselectcard(args[1]);
                     data.showMessage(p.getUniqueId().toString(),"§aカード「"+args[1]+"」をセットしました。");
+                    data.getStats(p.getUniqueId().toString()).saveFile();
                     return true;
                 }
             }else if(args[0].equalsIgnoreCase("cardunset")){
@@ -267,6 +411,7 @@ public class SiegeCommand implements CommandExecutor,Listener{
                 }
                 data.getStats(p.getUniqueId().toString()).removeselectcard(args[1]);
                 data.showMessage(p.getUniqueId().toString(),"§aカード「"+args[1]+"」をアンセットしました。");
+                data.getStats(p.getUniqueId().toString()).saveFile();
                 return true;
             }else if(args[0].equalsIgnoreCase("card")){
                 if(args[1].equalsIgnoreCase("list")) {
@@ -372,6 +517,23 @@ public class SiegeCommand implements CommandExecutor,Listener{
                     cardsetup.get(p.getUniqueId()).arg = args[2];
                     data.showMessage(p.getUniqueId().toString(), "§aカードのargをセットしました。");
                 }
+            }else if(args[0].equalsIgnoreCase("addshop")) {
+                if (!p.hasPermission("siege.setup")) {
+                    p.sendMessage(data.plugin.getPrefix() + "§cあなたには権限がありません！");
+                    return true;
+                }
+                try{
+                    Integer.parseInt(args[2]);
+                }catch (NumberFormatException e){
+                    p.sendMessage(data.plugin.getPrefix() + "§c値段が数字ではありません！");
+                    return true;
+                }
+                List<String> shop =  data.plugin.config.getStringList("shop");
+                shop.add(args[1]+" = "+args[2]);
+                data.plugin.config.set("shop",shop);
+                data.plugin.saveConfig();
+                p.sendMessage(data.plugin.getPrefix() + "§a追加しました。");
+                return true;
             }
         }else{
             if(args[0].equalsIgnoreCase("card")) {

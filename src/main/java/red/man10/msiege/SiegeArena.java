@@ -13,6 +13,8 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -33,7 +35,7 @@ public class SiegeArena implements Listener {
     SiegeTeam team1;
     SiegeTeam team2;
 
-    UUID uniqueGameID = null;
+
 
     SBossBar bar = null;
     Scoreboard scoreboard = null;
@@ -47,6 +49,8 @@ public class SiegeArena implements Listener {
     static ArrayList<Material> dirtblocks = new ArrayList<>();
     static ArrayList<Material> woodblocks = new ArrayList<>();
 
+    SiegeCraft craft;
+    UUID uniqueGameID = null;
     static{
         stoneblocks.add(Material.COBBLESTONE);
         stoneblocks.add(Material.ENDER_STONE);
@@ -59,15 +63,21 @@ public class SiegeArena implements Listener {
         woodblocks.add(Material.LOG_2);
     }
 
+    public void generateUniqueID(){
+        uniqueGameID = UUID.randomUUID();
+    }
+
     SiegeData data;
 
     public SiegeArena(SiegeData data,String name){
         canjoin = false;
+        craft = new SiegeCraft(data);
         this.data = data;
         Bukkit.getServer().getPluginManager().registerEvents(this,data.plugin);
         this.name = name;
         team1 = new SiegeTeam();
         team2 = new SiegeTeam();
+        uniqueGameID = UUID.randomUUID();
     }
 
     @EventHandler
@@ -77,6 +87,15 @@ public class SiegeArena implements Listener {
                 if(e.getBlock().getLocation().getWorld().getName().equalsIgnoreCase(worldname)){
                     if(!placeblocklist.contains(e.getBlock())){
                         if(stoneblocks.contains(e.getBlock().getType())||dirtblocks.contains(e.getBlock().getType())||woodblocks.contains(e.getBlock().getType())||Material.WOOL==e.getBlock().getType()){
+                            if(team1.getLoc().distance(e.getBlock().getLocation())<5&&team2.playerlist.contains(e.getPlayer().getUniqueId())){
+                                e.setCancelled(true);
+                                data.showMessage(e.getPlayer().getUniqueId().toString(),"§c相手のチームのリス地半径5ブロック以内にはブロックを置けません！");
+                                return;
+                            }else if(team2.getLoc().distance(e.getBlock().getLocation())<5&&team1.playerlist.contains(e.getPlayer().getUniqueId())){
+                                e.setCancelled(true);
+                                data.showMessage(e.getPlayer().getUniqueId().toString(),"§c相手のチームのリス地半径5ブロック以内にはブロックを置けません！");
+                                return;
+                            }
                             placeblocklist.add(e.getBlock());
                         }else{
                             data.showMessage(e.getPlayer().getUniqueId().toString(),"§c置けないブロックです！");
@@ -139,14 +158,14 @@ public class SiegeArena implements Listener {
         }
     }
 
-    public void updateScoreBoard_team1(int old_hp){
+    public synchronized void updateScoreBoard_team1(int old_hp){
         scoreboard.removeScores("§c§lTEAM1 §eネクサスHP: §a"+old_hp);
         scoreboard.addScore("§c§lTEAM1 §eネクサスHP: §a"+team1.getNexushp(),10);
     }
 
-    public void updateScoreBoard_team2(int old_hp){
-        scoreboard.removeScores("§c§lTEAM1 §eネクサスHP: §a"+old_hp);
-        scoreboard.addScore("§c§lTEAM1 §eネクサスHP: §a"+team2.getNexushp(),10);
+    public synchronized void updateScoreBoard_team2(int old_hp){
+        scoreboard.removeScores("§b§lTEAM2 §eネクサスHP: §a"+old_hp);
+        scoreboard.addScore("§b§lTEAM2 §eネクサスHP: §a"+team2.getNexushp(),10);
     }
 
     public void updateScoreBoard_wave(int old_wave){
@@ -317,7 +336,7 @@ public class SiegeArena implements Listener {
                     event.setRespawnLocation(team2.loc);
                 }
                 p.setGameMode(GameMode.SPECTATOR);
-                p.addPotionEffect(PotionEffectType.BLINDNESS.createEffect(respawntime * 20, 1));
+                p.addPotionEffect(PotionEffectType.BLINDNESS.createEffect(respawntime * 20+20, 0));
                 Bukkit.getScheduler().scheduleSyncDelayedTask(data.plugin, () -> {
                     if (!nowgame) {
                         return;
@@ -329,13 +348,71 @@ public class SiegeArena implements Listener {
                     }
                     p.setGameMode(GameMode.SURVIVAL);
                     p.addPotionEffect(PotionEffectType.DAMAGE_RESISTANCE.createEffect(100, 4));
-                    Bukkit.broadcastMessage(data.plugin.getPrefix() + "§a§lリスポーンしました！ 無敵が切れるまで5秒…");
-                    Bukkit.getScheduler().scheduleSyncDelayedTask(data.plugin, () -> Bukkit.broadcastMessage(data.plugin.getPrefix() + "§a§l無敵が切れました"), 100);
+                    p.sendMessage(data.plugin.getPrefix() + "§a§lリスポーンしました！ 無敵が切れるまで5秒…");
+                    Bukkit.getScheduler().scheduleSyncDelayedTask(data.plugin, () -> p.sendMessage(data.plugin.getPrefix() + "§a§l無敵が切れました"), 100);
                 }, respawntime * 20);
             }
         }
     }
 
+    @EventHandler
+    public void onHit(EntityDamageByEntityEvent event){
+        if (nowgame) {
+            if (event.getEntity() instanceof Player && event.getDamager() instanceof Player) {
+                Player damager = (Player) event.getDamager();
+                Player attacker = (Player) event.getEntity();
+                SiegeTeam team = data.tc.getTeam(damager);
+                if (team == null) {
+                    return;
+                }
+                if(wave == 0){
+                    data.showMessage(damager.getUniqueId().toString(), "現在準備ウェーブ中です！");
+                    event.setCancelled(true);
+                }
+                if (team1.playerlist.contains(damager.getUniqueId()) && team1.playerlist.contains(attacker.getUniqueId())) {
+                    data.showMessage(damager.getUniqueId().toString(), "チームメイトには攻撃できません！");
+                    event.setCancelled(true);
+                } else if (team2.playerlist.contains(damager.getUniqueId()) && team2.playerlist.contains(attacker.getUniqueId())) {
+                    data.showMessage(damager.getUniqueId().toString(), "チームメイトには攻撃できません！");
+                    event.setCancelled(true);
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onDeath(PlayerDeathEvent e) {
+        Player korosita = e.getEntity().getKiller();
+        Player korosareta = e.getEntity();
+        if(korosita==null){
+            return;
+        }
+        String korositaname = korosita.getName();
+        String korosaretaname = korosareta.getName();
+        if (nowgame) {
+            if (team1.playerlist.contains(korosareta.getUniqueId()) || team2.playerlist.contains(korosareta.getUniqueId())) {
+                data.getStats(korosareta.getUniqueId().toString()).setDeath(data.getStats(korosareta.getUniqueId().toString()).getDeath()+1);
+                data.showMessage(korosareta.getUniqueId().toString(),korosita.getName()+"§cにキルされた。");
+                if (team1.playerlist.contains(korosareta.getUniqueId())){
+                    korosaretaname = "§c[TEAM1]"+korosaretaname;
+                }else{
+                    korosaretaname = "§b[TEAM2]"+korosaretaname;
+                }
+            }
+            if (team1.playerlist.contains(korosita.getUniqueId()) || team2.playerlist.contains(korosita.getUniqueId())) {
+                data.getStats(korosita.getUniqueId().toString()).setKill(data.getStats(korosita.getUniqueId().toString()).getKill()+1);
+                data.getStats(korosita.getUniqueId().toString()).setPoint(data.getStats(korosita.getUniqueId().toString()).getPoint()+4);
+                data.showMessage(korosita.getUniqueId().toString(),korosaretaname+"§eをキルした。 +4point");
+                if (team1.playerlist.contains(korosita.getUniqueId())){
+                    korositaname = "§c[TEAM1]"+korositaname;
+                }else{
+                    korositaname = "§b[TEAM2]"+korositaname;
+                }
+            }
+            e.setDeathMessage(null);
+            data.showBattleMessage(name,korosaretaname+" §fは "+korositaname+" §fにキルされた");
+        }
+    }
 
     @EventHandler
     public void onBlockBreaked(BlockBreakEvent e) {
@@ -402,6 +479,8 @@ public class SiegeArena implements Listener {
                         data.showMessage(e.getPlayer().getUniqueId().toString(), "§c相手チームのネクサスにダメージを与えました！ 残りHP: §6" + team2.nexushp);
                         if (team2.nexushp <= 0) {
                             data.gameEnd(name, 1);
+                            team1.nexushp = 200;
+                            team2.nexushp = 200;
                         }
                     } else {
                         data.showMessage(e.getPlayer().getUniqueId().toString(), "§c初期から配置されているブロックは壊せません！");
@@ -412,9 +491,7 @@ public class SiegeArena implements Listener {
         }
     }
 
-    public void generateUniqueID(){
-        uniqueGameID = UUID.randomUUID();
-    }
+
 
     public void resetUniqueID(){
         uniqueGameID = null;

@@ -1,12 +1,13 @@
 package red.man10.msiege.util;
 
+import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.UUID;
 
-public abstract class InvListener implements Listener {
+public class InvListener implements Listener {
     private JavaPlugin plugin;
     private InventoryAPI inv;
     private UUID player;
@@ -24,6 +25,9 @@ public abstract class InvListener implements Listener {
     }
 
     public boolean ClickCheck(InventoryClickEvent e){
+        if(e.getWhoClicked()==null||e.getClickedInventory()==null){
+            return false;
+        }
         if(e.getClickedInventory().equals(e.getWhoClicked().getInventory())){
             return false;
         }

@@ -21,6 +21,10 @@ public class ItemBankManager {
         long amount;
     }
 
+    public ItemBankManager(SiegeData data){
+        this.data = data;
+    }
+
     //      プレイヤーの持っているストレージリストを得る
     public ArrayList<ItemStorage> getStorageList(String uuid){
 
