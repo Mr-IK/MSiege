@@ -477,10 +477,8 @@ public class SiegeData implements Listener {
         startarena.resetUniqueID();
         startarena.team1.playerlist.clear();
         startarena.team2.playerlist.clear();
-        startarena.team1.nexushp = 200;
-        startarena.team1.teaminv = Bukkit.createInventory(null,54,"§8チームインベントリ");
-        startarena.team2.nexushp = 200;
-        startarena.team2.teaminv = Bukkit.createInventory(null,54,"§8チームインベントリ");
+        startarena.team1.teaminv.clear();
+        startarena.team2.teaminv.clear();
         startarena.craft.playerlist.clear();
         startarena.generateUniqueID();
         startarena.resetWorld();

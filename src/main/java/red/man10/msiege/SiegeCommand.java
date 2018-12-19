@@ -85,6 +85,40 @@ public class SiegeCommand implements CommandExecutor,Listener{
                 arena.team1.playerlist.remove(p.getUniqueId());
                 arena.team2.playerlist.remove(p.getUniqueId());
                 data.showMessage(p.getUniqueId().toString(),"§a"+arena.getName()+"から抜けました");
+            }else if(args[0].equalsIgnoreCase("stop1")){
+                if (!p.hasPermission("siege.setup")) {
+                    data.showMessage(p.getUniqueId().toString(),"§cあなたには権限がありません！");
+                    return true;
+                }
+                SiegeArena arena = null;
+                for(String str:data.list()){
+                    if(data.getArena(str).team1.playerlist.contains(p.getUniqueId())||data.getArena(str).team2.playerlist.contains(p.getUniqueId())){
+                        arena = data.getArena(str);
+                        break;
+                    }
+                }
+                if(arena==null){
+                    data.showMessage(p.getUniqueId().toString(),"§cあなたはどのゲームにも参加していません！");
+                    return true;
+                }
+                data.gameEnd(arena.getName(),1);
+            }else if(args[0].equalsIgnoreCase("stop2")){
+                if (p.hasPermission("siege.forcestart")) {
+                    data.showMessage(p.getUniqueId().toString(),"§cあなたには権限がありません！");
+                    return true;
+                }
+                SiegeArena arena = null;
+                for(String str:data.list()){
+                    if(data.getArena(str).team1.playerlist.contains(p.getUniqueId())||data.getArena(str).team2.playerlist.contains(p.getUniqueId())){
+                        arena = data.getArena(str);
+                        break;
+                    }
+                }
+                if(arena==null){
+                    data.showMessage(p.getUniqueId().toString(),"§cあなたはどのゲームにも参加していません！");
+                    return true;
+                }
+                data.gameEnd(arena.getName(),2);
             }else if(args[0].equalsIgnoreCase("help")){
                 if (p.hasPermission("siege.setup")) {
                     p.sendMessage("§4------------Admin用-------------");
@@ -95,6 +129,8 @@ public class SiegeCommand implements CommandExecutor,Listener{
                     p.sendMessage("§c/" + cmd + " nexusloc2 [アリーナ名] : アリーナのネクサス2をセット");
                     p.sendMessage("§c/" + cmd + " world [アリーナ名] : 今いるワールドをマップとしてセット");
                     p.sendMessage("§c/" + cmd + " save [アリーナ名] : アリーナのデータをセーブ");
+                    p.sendMessage("§c/" + cmd + " stop1 : ゲームを強制終了(team1勝利)する");
+                    p.sendMessage("§c/" + cmd + " stop2 : ゲームを強制終了(team2勝利)する");
                     p.sendMessage("§c-------------Card関連-------------");
                     p.sendMessage("§c/" + cmd + " card create [カード名] : カードを作成する");
                     p.sendMessage("§c/" + cmd + " card lore [lore1] [lore2] …: カードのloreを設定する");

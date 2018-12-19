@@ -208,7 +208,7 @@ public class GUIManager implements Listener {
                 e.setCancelled(true);
                 inv.regenerateID();
                 super.unregister();
-                shop(inv,(Player)e.getWhoClicked());
+                shop((Player)e.getWhoClicked());
             }
             @EventHandler
             public void onClose(InventoryCloseEvent e){
@@ -276,16 +276,27 @@ public class GUIManager implements Listener {
         inv.openInv(p);
     }
 
-    public void shop(InventoryAPI inv,Player p){
-        inv.updateTitle(p,"§d§lM§7§lSiege §6§lショップ");
+    public void shop(Player p){
+        shop(new InventoryAPI(data.plugin,data.plugin.prefix,54),p,false);
+    }
+
+    public void shop(InventoryAPI inv,Player p,boolean update){
         inv.clear();
         inv.fillInv(new ItemStack(Material.STAINED_GLASS_PANE,1,(short)4));
-        inv.setItems(new int[]{10,11,12,13,14,15,16},new ItemStack(Material.AIR));
+        inv.setItems(new int[]{10,11,12,13,14,15,16, 19,20,21,22,23,24,25, 28,29,30,31,32,33,34, 37,38,39,40,41,42,43, 46,47,48,49,50,51,52},new ItemStack(Material.AIR));
         inv.allListenerRegist(p);
         //ここにショップのことをかくぅー
         int pos = 10;
         for(String str : data.plugin.config.getStringList("shop")){
             if(pos == 17){
+                pos=19;
+            }else if(pos == 26){
+                pos=28;
+            }else if(pos == 35){
+                pos=37;
+            }else if(pos == 44){
+                pos=46;
+            }else if(pos == 53){
                 break;
             }
             String card = str.split(" = ")[0];
@@ -321,7 +332,7 @@ public class GUIManager implements Listener {
                     return;
                 }
                 e.setCancelled(true);
-                if (e.getSlot() >= 10&&e.getSlot() <=16) {
+                if (e.getSlot() >= 10&&e.getSlot() <=16||e.getSlot() >= 19&&e.getSlot() <=25||e.getSlot() >= 28&&e.getSlot() <=34||e.getSlot() >= 37&&e.getSlot() <=43||e.getSlot() >= 46&&e.getSlot() <=52) {
                     if(e.getInventory().getItem(e.getSlot())==null){
                         return;
                     }
@@ -349,7 +360,7 @@ public class GUIManager implements Listener {
                     data.showMessage(p.getUniqueId().toString(),"§aカード「"+name+"」を購入しました。 所持ポイント: "+data.getStats(p.getUniqueId().toString()).getPoint());
                     data.getStats(p.getUniqueId().toString()).saveFile();
                     super.unregister();
-                    shop(inv,p);
+                    shop(p);
                 }
             }
             @EventHandler
@@ -359,7 +370,11 @@ public class GUIManager implements Listener {
                 }
             }
         });
-        inv.allListenerRegist(p);
+        if(update){
+            inv.allListenerRegist(p);
+        }else{
+            inv.openInv(p);
+        }
     }
 
     private void openSetting(InventoryAPI inv,Player p){
@@ -403,6 +418,10 @@ public class GUIManager implements Listener {
                 continue;
             }
             SiegeCard cards = data.getCard(card);
+            if(cards==null){
+                data.getStats(p.getUniqueId().toString()).removehavecard(card);
+                continue;
+            }
             ItemStack item = cards.item.get(0).clone();
             ItemMeta meta = item.getItemMeta();
             meta.setDisplayName("§f"+cards.name);
@@ -528,6 +547,10 @@ public class GUIManager implements Listener {
                 continue;
             }
             SiegeCard cards = data.getCard(card);
+            if(cards==null){
+                data.getStats(p.getUniqueId().toString()).removehavecard(card);
+                continue;
+            }
             ItemStack item = cards.item.get(0).clone();
             ItemMeta meta = item.getItemMeta();
             meta.setDisplayName("§f"+cards.name);

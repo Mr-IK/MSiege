@@ -34,6 +34,7 @@ public class SiegeArena implements Listener {
     String worldname;
     SiegeTeam team1;
     SiegeTeam team2;
+    private int hp = 50;
 
 
 
@@ -479,8 +480,8 @@ public class SiegeArena implements Listener {
                         data.showMessage(e.getPlayer().getUniqueId().toString(), "§c相手チームのネクサスにダメージを与えました！ 残りHP: §6" + team2.nexushp);
                         if (team2.nexushp <= 0) {
                             data.gameEnd(name, 1);
-                            team1.nexushp = 200;
-                            team2.nexushp = 200;
+                            team1.nexushp = hp;
+                            team2.nexushp = hp;
                         }
                     } else {
                         data.showMessage(e.getPlayer().getUniqueId().toString(), "§c初期から配置されているブロックは壊せません！");
@@ -522,6 +523,7 @@ public class SiegeArena implements Listener {
                 data.set("team1.nexusloc", team1.getNexusloc());
                 data.set("team2.loc", team2.getLoc());
                 data.set("team2.nexusloc", team2.getNexusloc());
+                data.set("nexushp", hp);
                 data.save(f);
                 canjoin = true;
             } catch (IOException exception) {
@@ -550,6 +552,7 @@ public class SiegeArena implements Listener {
             SiegeTeam team2 = new SiegeTeam();
             team2.loc = (Location) data.get("team2.loc");
             team2.nexusloc = (Location) data.get("team2.nexusloc");
+            hp = data.getInt("nexushp");
             this.team1 = team1;
             this.team2 = team2;
         }
@@ -604,6 +607,10 @@ public class SiegeArena implements Listener {
 
     public boolean isCanjoin() {
         return canjoin;
+    }
+
+    public int getHp(){
+        return hp;
     }
 
     public boolean isNowgame() {
