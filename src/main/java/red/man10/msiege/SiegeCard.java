@@ -22,7 +22,7 @@ public class SiegeCard {
     SiegeData data;
 
     enum CardType{
-        item,command
+        item,command,armor
     }
 
     public SiegeCard(SiegeData data,String name,boolean noload){
@@ -92,6 +92,22 @@ public class SiegeCard {
                 Bukkit.dispatchCommand(Bukkit.getConsoleSender(),cmd);
             }else{
                 Bukkit.dispatchCommand(p, arg);
+            }
+        }else if(type.equals(CardType.armor)){
+            String[] args = arg.split(" ");
+            int count= 0;
+            for(ItemStack item: item){
+                if(count<=args.length-1){
+                    if(args[count].equalsIgnoreCase("helmet")){
+                        p.getInventory().setHelmet(item);
+                    }else if(args[count].equalsIgnoreCase("chestplate")){
+                        p.getInventory().setChestplate(item);
+                    }else if(args[count].equalsIgnoreCase("legging")){
+                        p.getInventory().setLeggings(item);
+                    }else if(args[count].equalsIgnoreCase("boot")){
+                        p.getInventory().setBoots(item);
+                    }
+                }
             }
         }
     }

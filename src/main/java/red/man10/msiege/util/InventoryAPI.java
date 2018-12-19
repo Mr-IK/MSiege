@@ -204,7 +204,7 @@ public class InventoryAPI{
             meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         }
         meta.setUnbreakable(true);
-        meta.setOwningPlayer(Bukkit.getOfflinePlayer(playeruuid));
+        meta.setOwningPlayer(Bukkit.getPlayer(playeruuid));
         items.setItemMeta(meta);
         return items;
     }

@@ -134,7 +134,7 @@ public class SiegeCommand implements CommandExecutor,Listener{
                     p.sendMessage("§c-------------Card関連-------------");
                     p.sendMessage("§c/" + cmd + " card create [カード名] : カードを作成する");
                     p.sendMessage("§c/" + cmd + " card lore [lore1] [lore2] …: カードのloreを設定する");
-                    p.sendMessage("§c/" + cmd + " card type item,command,craft : カードのタイプを設定する");
+                    p.sendMessage("§c/" + cmd + " card type item,command,armor : カードのタイプを設定する");
                     p.sendMessage("§c/" + cmd + " card additem : カードのアイテムを追加する");
                     p.sendMessage("§c/" + cmd + " card clearitem : カードのアイテムをクリアする");
                     p.sendMessage("§c/" + cmd + " card setcost [数字]: カードのコストを設定する");
