@@ -14,8 +14,11 @@ import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import red.man10.msiege.util.SBossBar;
@@ -34,7 +37,7 @@ public class SiegeArena implements Listener {
     String worldname;
     SiegeTeam team1;
     SiegeTeam team2;
-    private int hp = 50;
+    int hp = 50;
 
 
 
@@ -108,6 +111,25 @@ public class SiegeArena implements Listener {
         }
     }
 
+    @EventHandler
+    public void onMove(PlayerMoveEvent e) {
+        if(nowgame) {
+            if (team1.playerlist.contains(e.getPlayer().getUniqueId()) || team2.playerlist.contains(e.getPlayer().getUniqueId())) {
+                if(team1.getNexusloc().distance(e.getTo())>10&&team1.playerlist.contains(e.getPlayer().getUniqueId())){
+                    if (wave == 0) {
+                        e.setCancelled(true);
+                        data.showMessage(e.getPlayer().getUniqueId().toString(),"§c準備ウェーブ中はネクサスから半径10ブロック以上には移動できません！");
+                    }
+                }else if(team2.getNexusloc().distance(e.getTo())>10&&team2.playerlist.contains(e.getPlayer().getUniqueId())){
+                    if (wave == 0) {
+                        e.setCancelled(true);
+                        data.showMessage(e.getPlayer().getUniqueId().toString(),"§c準備ウェーブ中はネクサスから半径10ブロック以上には移動できません！");
+                    }
+                }
+            }
+        }
+    }
+
     public boolean checkPickaxe(Material item){
         return item == Material.WOOD_PICKAXE || item == Material.STONE_PICKAXE
                 || item == Material.IRON_PICKAXE || item == Material.GOLD_PICKAXE || item == Material.DIAMOND_PICKAXE;
@@ -166,7 +188,7 @@ public class SiegeArena implements Listener {
 
     public synchronized void updateScoreBoard_team2(int old_hp){
         scoreboard.removeScores("§b§lTEAM2 §eネクサスHP: §a"+old_hp);
-        scoreboard.addScore("§b§lTEAM2 §eネクサスHP: §a"+team2.getNexushp(),10);
+        scoreboard.addScore("§b§lTEAM2 §eネクサスHP: §a"+team2.getNexushp(),9);
     }
 
     public void updateScoreBoard_wave(int old_wave){
@@ -213,6 +235,7 @@ public class SiegeArena implements Listener {
             @Override
             public void run(){
                 if(!nowgame||getUniqueGameID()==null||!gameid.equals(getUniqueGameID())){
+                    this.cancel();
                     return;
                 }
                 time--;
@@ -220,6 +243,7 @@ public class SiegeArena implements Listener {
                     bar.setProgress(1);
                     wave1Bossbar();
                     this.cancel();
+                    return;
                 }
                 bar.setTitle("§a§l準備ウェーブ: 残り"+inttotimestring(time));
                 bar.takeProgress(0.00333);
@@ -236,6 +260,7 @@ public class SiegeArena implements Listener {
             @Override
             public void run(){
                 if(!nowgame||getUniqueGameID()==null||!gameid.equals(getUniqueGameID())){
+                    this.cancel();
                     return;
                 }
                 time--;
@@ -243,6 +268,7 @@ public class SiegeArena implements Listener {
                     bar.setProgress(1);
                     wave2Bossbar();
                     this.cancel();
+                    return;
                 }
                 bar.setTitle("§a§lウェーブ1: 残り"+inttotimestring(time));
                 bar.takeProgress(0.00161);
@@ -259,6 +285,7 @@ public class SiegeArena implements Listener {
             @Override
             public void run(){
                 if(!nowgame||getUniqueGameID()==null||!gameid.equals(getUniqueGameID())){
+                    this.cancel();
                     return;
                 }
                 time--;
@@ -266,6 +293,7 @@ public class SiegeArena implements Listener {
                     bar.setProgress(1);
                     wave3Bossbar();
                     this.cancel();
+                    return;
                 }
                 bar.setTitle("§a§lウェーブ2: 残り"+inttotimestring(time));
                 bar.takeProgress(0.00161);
@@ -282,6 +310,7 @@ public class SiegeArena implements Listener {
             @Override
             public void run(){
                 if(!nowgame||getUniqueGameID()==null||!gameid.equals(getUniqueGameID())){
+                    this.cancel();
                     return;
                 }
                 time--;
@@ -289,6 +318,7 @@ public class SiegeArena implements Listener {
                     bar.setProgress(1);
                     wave4Bossbar();
                     this.cancel();
+                    return;
                 }
                 bar.setTitle("§a§lウェーブ3: 残り"+inttotimestring(time));
                 bar.takeProgress(0.00161);
@@ -340,6 +370,13 @@ public class SiegeArena implements Listener {
                 p.addPotionEffect(PotionEffectType.BLINDNESS.createEffect(respawntime * 20+20, 0));
                 Bukkit.getScheduler().scheduleSyncDelayedTask(data.plugin, () -> {
                     if (!nowgame) {
+                        p.setGameMode(GameMode.SURVIVAL);
+                        Bukkit.dispatchCommand(p,"ewarp minigame_lobby");
+                        return;
+                    }
+                    if (!team1.playerlist.contains(event.getPlayer().getUniqueId()) && !team2.playerlist.contains(event.getPlayer().getUniqueId())) {
+                        p.setGameMode(GameMode.SURVIVAL);
+                        Bukkit.dispatchCommand(p,"ewarp minigame_lobby");
                         return;
                     }
                     if (team1.playerlist.contains(p.getUniqueId())) {
@@ -457,7 +494,8 @@ public class SiegeArena implements Listener {
                         int oldhp = team1.nexushp;
                         team1.damagenexus(1);
                         updateScoreBoard_team1(oldhp);
-                        data.showMessage(e.getPlayer().getUniqueId().toString(), "§c相手チームのネクサスにダメージを与えました！ 残りHP: §6" + team1.nexushp);
+                        data.showMessage(e.getPlayer().getUniqueId().toString(), "§c相手チームのネクサスにダメージを与えました！ +1NS 残りHP: §6" + team1.nexushp);
+                        e.getPlayer().getInventory().addItem(new ItemStack(Material.NETHER_STAR));
                         e.setCancelled(true);
                         if (team1.nexushp <= 0) {
                             team1.nexushp = 200;
@@ -477,7 +515,8 @@ public class SiegeArena implements Listener {
                         team2.damagenexus(1);
                         updateScoreBoard_team2(oldhp);
                         e.setCancelled(true);
-                        data.showMessage(e.getPlayer().getUniqueId().toString(), "§c相手チームのネクサスにダメージを与えました！ 残りHP: §6" + team2.nexushp);
+                        data.showMessage(e.getPlayer().getUniqueId().toString(), "§c相手チームのネクサスにダメージを与えました！ +1NS 残りHP: §6" + team2.nexushp);
+                        e.getPlayer().getInventory().addItem(new ItemStack(Material.NETHER_STAR));
                         if (team2.nexushp <= 0) {
                             data.gameEnd(name, 1);
                             team1.nexushp = hp;
@@ -488,6 +527,15 @@ public class SiegeArena implements Listener {
                         e.setCancelled(true);
                     }
                 }
+            }
+        }
+    }
+
+    @EventHandler
+    public void onExplode(EntityExplodeEvent e){
+        if (nowgame) {
+            if (e.getLocation().getWorld().getName().equalsIgnoreCase(worldname)) {
+                e.setCancelled(true);
             }
         }
     }
@@ -555,6 +603,8 @@ public class SiegeArena implements Listener {
             hp = data.getInt("nexushp");
             this.team1 = team1;
             this.team2 = team2;
+            team1.nexushp = hp;
+            team2.nexushp = hp;
         }
     }
 
@@ -638,7 +688,7 @@ public class SiegeArena implements Listener {
         }else if(wave == 3){
             setRespawntime(15);
         }else if(wave == 4){
-            setRespawntime(20);
+            setRespawntime(30);
         }else if(wave == -1){
             setRespawntime(5);
         }

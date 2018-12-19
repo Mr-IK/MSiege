@@ -42,6 +42,11 @@ public class SiegeCraft implements Listener {
         if(playerlist.contains(player.getUniqueId())){
             if(e.getAction()==Action.RIGHT_CLICK_BLOCK){
                 Block block = e.getClickedBlock();
+                if(block.getLocation().equals(data.tc.getTeam(player).nexusloc)){
+                    e.setCancelled(true);
+                    data.cmd.gui.openNexusShop(player,data.tc.getTeam(player),data.getStats(player.getUniqueId().toString()).getJoinarena());
+                    return;
+                }
                 if(block.getType() == Material.WORKBENCH) {
                     e.setCancelled(true);
                     data.showMessage(player.getUniqueId().toString(),

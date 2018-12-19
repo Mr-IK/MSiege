@@ -10,11 +10,13 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.potion.PotionEffectType;
 import red.man10.msiege.util.InvListener;
 import red.man10.msiege.util.InventoryAPI;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public class GUIManager implements Listener {
 
@@ -116,6 +118,8 @@ public class GUIManager implements Listener {
                 new String[]{"§a"+data.ibm.getItemStorage(p.getUniqueId().toString(),8).amount+"個所持しています","§f左クリックで1個","§f右クリックで1スタック 取り出します"}, Material.WOOL,0,false));
         inv.setItem(11,inv.createUnbitem("§7§l丸石",
                 new String[]{"§a"+data.ibm.getItemStorage(p.getUniqueId().toString(),1).amount+"個所持しています","§f左クリックで1個","§f右クリックで1スタック 取り出します"}, Material.COBBLESTONE,0,false));
+        inv.setItem(12,inv.createUnbitem("§6§lオークの原木",
+                new String[]{"§a"+data.ibm.getItemStorage(p.getUniqueId().toString(),30).amount+"個所持しています","§f左クリックで1個","§f右クリックで1スタック 取り出します"}, Material.LOG,0,false));
         inv.addOriginalListing(new InvListener(data.plugin,inv){
             @EventHandler
             public synchronized void onClick(InventoryClickEvent e){
@@ -170,6 +174,29 @@ public class GUIManager implements Listener {
                             });
                         }
                     }
+                }else if(e.getSlot()==12) {
+                    SiegeTeam team = data.tc.getTeam(p);
+                    if (team != null) {
+                        if (e.getClick().isLeftClick()) {
+                            Bukkit.getScheduler().runTaskAsynchronously(data.plugin, () -> {
+                                if (data.ibm.reduceItem(p.getUniqueId().toString(), 30, 1)) {
+                                    p.getInventory().addItem(new ItemStack(Material.COBBLESTONE));
+                                    openItemBank(p,inv,true);
+                                } else {
+                                    data.showMessage(p.getUniqueId().toString(), "§c§l引き出しに失敗しました");
+                                }
+                            });
+                        } else if (e.getClick().isRightClick()) {
+                            Bukkit.getScheduler().runTaskAsynchronously(data.plugin, () -> {
+                                if (data.ibm.reduceItem(p.getUniqueId().toString(), 30, 64)) {
+                                    p.getInventory().addItem(new ItemStack(Material.COBBLESTONE, 64));
+                                    openItemBank(p,inv,true);
+                                } else {
+                                    data.showMessage(p.getUniqueId().toString(), "§c§l引き出しに失敗しました");
+                                }
+                            });
+                        }
+                    }
                 }
             }
             @EventHandler
@@ -184,6 +211,90 @@ public class GUIManager implements Listener {
         }else{
             inv.allListenerRegist(p);
         }
+    }
+
+    public void openNexusShop(Player p,SiegeTeam team,String arenaname) {
+        InventoryAPI inv = new InventoryAPI(data.plugin, "§d§lM§7§lSiege §3§l作戦メニュー", 27);
+        inv.fillInv(new ItemStack(Material.STAINED_GLASS_PANE,1,(short)7));
+        inv.setItems(new int[]{10,11,12,13,14,15,16},new ItemStack(Material.AIR));
+        inv.setItem(10,inv.createUnbitem("§3§l守れ！",
+                new String[]{"§aネザースターx10で購入できます。",
+                        "§aチーム全体に3分間耐性1を付与します。"}, Material.SHIELD,0,false));
+        inv.setItem(11,inv.createUnbitem("§3§l戦え！",
+                new String[]{"§aネザースターx10で購入できます。",
+                        "§aチーム全体に3分間攻撃力上昇1を付与します。"}, Material.IRON_SWORD,0,false));
+        inv.setItem(12,inv.createUnbitem("§3§l走れ！",
+                new String[]{"§aネザースターx10で購入できます。",
+                        "§aチーム全体に3分間速度上昇1を付与します。"}, Material.CHAINMAIL_BOOTS,0,false));
+        inv.addOriginalListing(new InvListener(data.plugin,inv){
+            @EventHandler
+            public synchronized void onClick(InventoryClickEvent e){
+                if(!super.ClickCheck(e)){
+                    return;
+                }
+                p.playSound(p.getLocation(), Sound.UI_BUTTON_CLICK,1.0f,1.0f);
+                e.setCancelled(true);
+                if(e.getSlot()==10){
+                    if(team!=null){
+                        ItemStack item = new ItemStack(Material.NETHER_STAR);
+                        if(SiegeCraft.getAmount((Player)e.getWhoClicked(),item)>=item.getAmount()){
+                            e.getWhoClicked().getInventory().remove(item);
+                            Bukkit.broadcastMessage(data.plugin.getPrefix()+"§a§l"+p.getName()+"§f§lが作戦を発動しました！");
+                            data.playsoundAll(arenaname,Sound.ENTITY_ENDERDRAGON_AMBIENT,1f,0.5f);
+                            for(UUID uuid:team.playerlist){
+                                if(Bukkit.getPlayer(uuid)!=null){
+                                    Bukkit.getPlayer(uuid).addPotionEffect(PotionEffectType.DAMAGE_RESISTANCE.createEffect(3600,0));
+                                    Bukkit.getPlayer(uuid).sendMessage(data.plugin.prefix+"§a"+p.getName()+": §f§l守れ！");
+                                }
+                            }
+                        }else{
+                            data.showMessage(p.getUniqueId().toString(),"§cネザースターが足りません! ネクサスにダメージを与えてゲットしましょう！");
+                        }
+                    }
+                }else if(e.getSlot()==11) {
+                    if (team != null) {
+                        ItemStack item = new ItemStack(Material.NETHER_STAR);
+                        if(SiegeCraft.getAmount((Player)e.getWhoClicked(),item)>=item.getAmount()){
+                            e.getWhoClicked().getInventory().remove(item);
+                            Bukkit.broadcastMessage(data.plugin.getPrefix()+"§a§l"+p.getName()+"§f§lが作戦を発動しました！");
+                            data.playsoundAll(arenaname,Sound.ENTITY_ENDERDRAGON_AMBIENT,1f,0.5f);
+                            for(UUID uuid:team.playerlist){
+                                if(Bukkit.getPlayer(uuid)!=null){
+                                    Bukkit.getPlayer(uuid).addPotionEffect(PotionEffectType.INCREASE_DAMAGE.createEffect(3600,0));
+                                    Bukkit.getPlayer(uuid).sendMessage(data.plugin.prefix+"§a"+p.getName()+": §f§l戦え！");
+                                }
+                            }
+                        }else{
+                            data.showMessage(p.getUniqueId().toString(),"§cネザースターが足りません! ネクサスにダメージを与えてゲットしましょう！");
+                        }
+                    }
+                }else if(e.getSlot()==12) {
+                    if (team != null) {
+                        ItemStack item = new ItemStack(Material.NETHER_STAR);
+                        if(SiegeCraft.getAmount((Player)e.getWhoClicked(),item)>=item.getAmount()){
+                            e.getWhoClicked().getInventory().remove(item);
+                            Bukkit.broadcastMessage(data.plugin.getPrefix()+"§a§l"+p.getName()+"§f§lが作戦を発動しました！");
+                            data.playsoundAll(arenaname,Sound.ENTITY_ENDERDRAGON_AMBIENT,1f,0.5f);
+                            for(UUID uuid:team.playerlist){
+                                if(Bukkit.getPlayer(uuid)!=null){
+                                    Bukkit.getPlayer(uuid).addPotionEffect(PotionEffectType.SPEED.createEffect(3600,0));
+                                    Bukkit.getPlayer(uuid).sendMessage(data.plugin.prefix+"§a"+p.getName()+": §f§l走れ！");
+                                }
+                            }
+                        }else{
+                            data.showMessage(p.getUniqueId().toString(),"§cネザースターが足りません! ネクサスにダメージを与えてゲットしましょう！");
+                        }
+                    }
+                }
+            }
+            @EventHandler
+            public void onClose(InventoryCloseEvent e){
+                if(e.getPlayer().getUniqueId()==p.getUniqueId()){
+                    super.unregister();
+                }
+            }
+        });
+        inv.openInv(p);
     }
 
     public void openMain(Player p){
@@ -208,7 +319,7 @@ public class GUIManager implements Listener {
                 e.setCancelled(true);
                 inv.regenerateID();
                 super.unregister();
-                shop((Player)e.getWhoClicked());
+                shop(p);
             }
             @EventHandler
             public void onClose(InventoryCloseEvent e){
@@ -277,14 +388,14 @@ public class GUIManager implements Listener {
     }
 
     public void shop(Player p){
-        shop(new InventoryAPI(data.plugin,data.plugin.prefix,54),p,false);
+        p.closeInventory();
+        shop(new InventoryAPI(data.plugin,"§d§lM§7§lSiege §6§lSHOP",54),p,false);
     }
 
     public void shop(InventoryAPI inv,Player p,boolean update){
         inv.clear();
         inv.fillInv(new ItemStack(Material.STAINED_GLASS_PANE,1,(short)4));
         inv.setItems(new int[]{10,11,12,13,14,15,16, 19,20,21,22,23,24,25, 28,29,30,31,32,33,34, 37,38,39,40,41,42,43, 46,47,48,49,50,51,52},new ItemStack(Material.AIR));
-        inv.allListenerRegist(p);
         //ここにショップのことをかくぅー
         int pos = 10;
         for(String str : data.plugin.config.getStringList("shop")){
@@ -332,7 +443,7 @@ public class GUIManager implements Listener {
                     return;
                 }
                 e.setCancelled(true);
-                if (e.getSlot() >= 10&&e.getSlot() <=16||e.getSlot() >= 19&&e.getSlot() <=25||e.getSlot() >= 28&&e.getSlot() <=34||e.getSlot() >= 37&&e.getSlot() <=43||e.getSlot() >= 46&&e.getSlot() <=52) {
+                if (e.getSlot() >= 10&&e.getSlot() <=16||(e.getSlot() >= 19&&e.getSlot() <=25)||(e.getSlot() >= 28&&e.getSlot() <=34)||(e.getSlot() >= 37&&e.getSlot() <=43)||(e.getSlot() >= 46&&e.getSlot() <=52)) {
                     if(e.getInventory().getItem(e.getSlot())==null){
                         return;
                     }
@@ -360,7 +471,7 @@ public class GUIManager implements Listener {
                     data.showMessage(p.getUniqueId().toString(),"§aカード「"+name+"」を購入しました。 所持ポイント: "+data.getStats(p.getUniqueId().toString()).getPoint());
                     data.getStats(p.getUniqueId().toString()).saveFile();
                     super.unregister();
-                    shop(p);
+                    shop(inv,p,true);
                 }
             }
             @EventHandler

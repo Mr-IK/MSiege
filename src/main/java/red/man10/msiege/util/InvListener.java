@@ -42,6 +42,7 @@ public class InvListener implements Listener {
     }
 
     public void unregister(){
+        HandlerList.unregisterAll(this);
         this.player = null;
     }
 }

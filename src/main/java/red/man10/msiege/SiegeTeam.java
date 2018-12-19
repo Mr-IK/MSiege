@@ -18,7 +18,7 @@ public class SiegeTeam {
     Inventory teaminv;
 
     public SiegeTeam(){
-        nexushp = 200;//200
+        nexushp = 50;//200
         teaminv = Bukkit.createInventory(null,54,"§8チームインベントリ");
     }
 

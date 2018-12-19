@@ -481,6 +481,8 @@ public class SiegeData implements Listener {
         startarena.team2.teaminv.clear();
         startarena.craft.playerlist.clear();
         startarena.generateUniqueID();
+        startarena.team1.nexushp = startarena.hp;
+        startarena.team2.nexushp = startarena.hp;
         startarena.resetWorld();
     }
 

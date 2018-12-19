@@ -100,12 +100,16 @@ public class SiegeCard {
                 if(count<=args.length-1){
                     if(args[count].equalsIgnoreCase("helmet")){
                         p.getInventory().setHelmet(item);
+                        count++;
                     }else if(args[count].equalsIgnoreCase("chestplate")){
                         p.getInventory().setChestplate(item);
+                        count++;
                     }else if(args[count].equalsIgnoreCase("legging")){
                         p.getInventory().setLeggings(item);
+                        count++;
                     }else if(args[count].equalsIgnoreCase("boot")){
                         p.getInventory().setBoots(item);
+                        count++;
                     }
                 }
             }

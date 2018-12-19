@@ -436,7 +436,7 @@ public class SiegeCommand implements CommandExecutor,Listener{
                         return true;
                     }
                     data.getStats(p.getUniqueId().toString()).addselectcard(args[1]);
-                    data.showMessage(p.getUniqueId().toString(),"§aカード「"+args[1]+"」をセットしました。");
+                    data.showMessage(p.getUniqueId().toString(),"§aカード「"+args[1]+"」をセットしました。 残りコスト: §e"+data.getPlayerHaveCost(p));
                     data.getStats(p.getUniqueId().toString()).saveFile();
                     return true;
                 }
@@ -516,7 +516,7 @@ public class SiegeCommand implements CommandExecutor,Listener{
                         data.showMessage(p.getUniqueId().toString(),"§cセットアップ/再設定が開始されていません！ もしかして: /"+cmd+" card create");
                         return true;
                     }
-                    if(!args[2].equalsIgnoreCase("command")&&!args[2].equalsIgnoreCase("item")&&!args[2].equalsIgnoreCase("craft")){
+                    if(!args[2].equalsIgnoreCase("command")&&!args[2].equalsIgnoreCase("item")&&!args[2].equalsIgnoreCase("armor")){
                         data.showMessage(p.getUniqueId().toString(), "§cタイプ名が不明です。");
                         return true;
                     }
