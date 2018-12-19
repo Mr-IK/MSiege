@@ -52,7 +52,7 @@ public class GUIManager implements Listener {
             }
             @EventHandler
             public void onClose(InventoryCloseEvent e){
-                super.unregister();
+                super.closeCheck(e);
             }
         });
 
@@ -79,7 +79,7 @@ public class GUIManager implements Listener {
             }
             @EventHandler
             public void onClose(InventoryCloseEvent e){
-                super.unregister();
+                super.closeCheck(e);
             }
         });
         inv.setItem(15,inv.createUnbitem("§3§lアイテムバンク",
@@ -105,7 +105,7 @@ public class GUIManager implements Listener {
             }
             @EventHandler
             public void onClose(InventoryCloseEvent e){
-                super.unregister();
+                super.closeCheck(e);
             }
         });
         inv.openInv(p);
@@ -201,9 +201,7 @@ public class GUIManager implements Listener {
             }
             @EventHandler
             public void onClose(InventoryCloseEvent e){
-                if(e.getPlayer().getUniqueId()==p.getUniqueId()){
-                    super.unregister();
-                }
+                super.closeCheck(e);
             }
         });
         if(!update){
@@ -289,9 +287,7 @@ public class GUIManager implements Listener {
             }
             @EventHandler
             public void onClose(InventoryCloseEvent e){
-                if(e.getPlayer().getUniqueId()==p.getUniqueId()){
-                    super.unregister();
-                }
+                super.closeCheck(e);
             }
         });
         inv.openInv(p);
@@ -323,9 +319,7 @@ public class GUIManager implements Listener {
             }
             @EventHandler
             public void onClose(InventoryCloseEvent e){
-                if(e.getPlayer().getUniqueId()==p.getUniqueId()){
-                    super.unregister();
-                }
+                super.closeCheck(e);
             }
         });
         inv.setItem(13,inv.createUnbitem("§7§lカード管理",
@@ -355,9 +349,7 @@ public class GUIManager implements Listener {
             }
             @EventHandler
             public void onClose(InventoryCloseEvent e){
-                if(e.getPlayer().getUniqueId()==p.getUniqueId()){
-                    super.unregister();
-                }
+                super.closeCheck(e);
             }
         });
         inv.setItem(15,inv.createSkullitem("§a§lステータス",
@@ -379,9 +371,7 @@ public class GUIManager implements Listener {
             }
             @EventHandler
             public void onClose(InventoryCloseEvent e){
-                if(e.getPlayer().getUniqueId()==p.getUniqueId()){
-                    super.unregister();
-                }
+                super.closeCheck(e);
             }
         });
         inv.openInv(p);
@@ -476,9 +466,7 @@ public class GUIManager implements Listener {
             }
             @EventHandler
             public void onClose(InventoryCloseEvent e){
-                if(e.getPlayer().getUniqueId()==p.getUniqueId()){
-                    super.unregister();
-                }
+                super.closeCheck(e);
             }
         });
         if(update){
@@ -505,9 +493,7 @@ public class GUIManager implements Listener {
             }
             @EventHandler
             public void onClose(InventoryCloseEvent e){
-                if(e.getPlayer().getUniqueId()==p.getUniqueId()){
-                    super.unregister();
-                }
+                super.closeCheck(e);
             }
         });
         inv.allListenerRegist(p);
@@ -604,9 +590,7 @@ public class GUIManager implements Listener {
                     ontimepass = false;
                     return;
                 }
-                if(e.getPlayer().getUniqueId()==p.getUniqueId()){
-                    super.unregister();
-                }
+                super.closeCheck(e);
             }
         });
         if(invnull) {
@@ -727,9 +711,7 @@ public class GUIManager implements Listener {
                     ontimepass = false;
                     return;
                 }
-                if(e.getPlayer().getUniqueId()==p.getUniqueId()){
-                    super.unregister();
-                }
+                super.closeCheck(e);
             }
         });
         if(invnull) {

@@ -3,6 +3,7 @@ package red.man10.msiege.util;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.UUID;
@@ -35,6 +36,12 @@ public class InvListener implements Listener {
             return false;
         }
         return checkUnique();
+    }
+
+    public void closeCheck(InventoryCloseEvent e){
+        if(e.getPlayer().getUniqueId()==player){
+            unregister();
+        }
     }
 
     public boolean checkUnique(){
