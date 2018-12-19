@@ -15,7 +15,7 @@ public final class MSiege extends JavaPlugin {
     String prefix = "§3[§dM§7Siege§3]§r";
     String prefix_nosec = "[MSiege]";
 
-    String buildcode = "v1.0-α-0100";
+    String buildcode = "v1.0-α-0110";
 
     @Override
     public void onEnable() {

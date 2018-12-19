@@ -115,15 +115,15 @@ public class SiegeArena implements Listener {
     public void onMove(PlayerMoveEvent e) {
         if(nowgame) {
             if (team1.playerlist.contains(e.getPlayer().getUniqueId()) || team2.playerlist.contains(e.getPlayer().getUniqueId())) {
-                if(team1.getNexusloc().distance(e.getTo())>10&&team1.playerlist.contains(e.getPlayer().getUniqueId())){
+                if(team1.getNexusloc().distance(e.getTo())>15&&team1.playerlist.contains(e.getPlayer().getUniqueId())){
                     if (wave == 0) {
                         e.setCancelled(true);
-                        data.showMessage(e.getPlayer().getUniqueId().toString(),"§c準備ウェーブ中はネクサスから半径10ブロック以上には移動できません！");
+                        data.showMessage(e.getPlayer().getUniqueId().toString(),"§c準備ウェーブ中はネクサスから半径15ブロック以上には移動できません！");
                     }
-                }else if(team2.getNexusloc().distance(e.getTo())>10&&team2.playerlist.contains(e.getPlayer().getUniqueId())){
+                }else if(team2.getNexusloc().distance(e.getTo())>15&&team2.playerlist.contains(e.getPlayer().getUniqueId())){
                     if (wave == 0) {
                         e.setCancelled(true);
-                        data.showMessage(e.getPlayer().getUniqueId().toString(),"§c準備ウェーブ中はネクサスから半径10ブロック以上には移動できません！");
+                        data.showMessage(e.getPlayer().getUniqueId().toString(),"§c準備ウェーブ中はネクサスから半径15ブロック以上には移動できません！");
                     }
                 }
             }
@@ -495,7 +495,7 @@ public class SiegeArena implements Listener {
                         team1.damagenexus(1);
                         updateScoreBoard_team1(oldhp);
                         data.showMessage(e.getPlayer().getUniqueId().toString(), "§c相手チームのネクサスにダメージを与えました！ +1NS 残りHP: §6" + team1.nexushp);
-                        e.getPlayer().getInventory().addItem(new ItemStack(Material.NETHER_STAR));
+                        team1.teaminv.addItem(new ItemStack(Material.NETHER_STAR));
                         e.setCancelled(true);
                         if (team1.nexushp <= 0) {
                             team1.nexushp = 200;
@@ -516,7 +516,7 @@ public class SiegeArena implements Listener {
                         updateScoreBoard_team2(oldhp);
                         e.setCancelled(true);
                         data.showMessage(e.getPlayer().getUniqueId().toString(), "§c相手チームのネクサスにダメージを与えました！ +1NS 残りHP: §6" + team2.nexushp);
-                        e.getPlayer().getInventory().addItem(new ItemStack(Material.NETHER_STAR));
+                        team2.teaminv.addItem(new ItemStack(Material.NETHER_STAR));
                         if (team2.nexushp <= 0) {
                             data.gameEnd(name, 1);
                             team1.nexushp = hp;

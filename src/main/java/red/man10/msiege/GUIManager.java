@@ -180,7 +180,7 @@ public class GUIManager implements Listener {
                         if (e.getClick().isLeftClick()) {
                             Bukkit.getScheduler().runTaskAsynchronously(data.plugin, () -> {
                                 if (data.ibm.reduceItem(p.getUniqueId().toString(), 30, 1)) {
-                                    p.getInventory().addItem(new ItemStack(Material.COBBLESTONE));
+                                    p.getInventory().addItem(new ItemStack(Material.LOG));
                                     openItemBank(p,inv,true);
                                 } else {
                                     data.showMessage(p.getUniqueId().toString(), "§c§l引き出しに失敗しました");
@@ -189,7 +189,7 @@ public class GUIManager implements Listener {
                         } else if (e.getClick().isRightClick()) {
                             Bukkit.getScheduler().runTaskAsynchronously(data.plugin, () -> {
                                 if (data.ibm.reduceItem(p.getUniqueId().toString(), 30, 64)) {
-                                    p.getInventory().addItem(new ItemStack(Material.COBBLESTONE, 64));
+                                    p.getInventory().addItem(new ItemStack(Material.LOG, 64));
                                     openItemBank(p,inv,true);
                                 } else {
                                     data.showMessage(p.getUniqueId().toString(), "§c§l引き出しに失敗しました");
@@ -564,7 +564,7 @@ public class GUIManager implements Listener {
             inv.setItem(53,new ItemStack(Material.STAINED_GLASS_PANE,1,(short)7));
         }
         inv.addOriginalListing(new InvListener(data.plugin, inv) {
-            private boolean ontimepass = true;
+            private boolean ontimepass = invnull;
             @EventHandler
             public void onClick(InventoryClickEvent e) {
                 if (!super.ClickCheck(e)) {
@@ -719,7 +719,7 @@ public class GUIManager implements Listener {
                 droppingPage(inv,p,page,false);
             }
 
-            private boolean ontimepass = true;
+            private boolean ontimepass = invnull;
 
             @EventHandler
             public void onClose(InventoryCloseEvent e){

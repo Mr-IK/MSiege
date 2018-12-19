@@ -103,7 +103,7 @@ public class SiegeCommand implements CommandExecutor,Listener{
                 }
                 data.gameEnd(arena.getName(),1);
             }else if(args[0].equalsIgnoreCase("stop2")){
-                if (p.hasPermission("siege.forcestart")) {
+                if (!p.hasPermission("siege.forcestart")) {
                     data.showMessage(p.getUniqueId().toString(),"§cあなたには権限がありません！");
                     return true;
                 }

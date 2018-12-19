@@ -42,11 +42,6 @@ public class SiegeCraft implements Listener {
         if(playerlist.contains(player.getUniqueId())){
             if(e.getAction()==Action.RIGHT_CLICK_BLOCK){
                 Block block = e.getClickedBlock();
-                if(block.getLocation().equals(data.tc.getTeam(player).nexusloc)){
-                    e.setCancelled(true);
-                    data.cmd.gui.openNexusShop(player,data.tc.getTeam(player),data.getStats(player.getUniqueId().toString()).getJoinarena());
-                    return;
-                }
                 if(block.getType() == Material.WORKBENCH) {
                     e.setCancelled(true);
                     data.showMessage(player.getUniqueId().toString(),
@@ -79,6 +74,10 @@ public class SiegeCraft implements Listener {
                     }
                     data.cmd.gui.openItemBank(player, new InventoryAPI(data.plugin, "§d§lM§7§lSiege §3§lItemBank", 27),false);
                     return;
+                }else if(block.getType() == Material.TRAPPED_CHEST) {
+                    e.setCancelled(true);
+                    data.cmd.gui.openNexusShop(player,data.tc.getTeam(player),data.getStats(player.getUniqueId().toString()).getJoinarena());
+                    return;
                 }
             }
             if(e.getAction()==Action.RIGHT_CLICK_AIR||e.getAction()==Action.RIGHT_CLICK_BLOCK){
@@ -88,7 +87,7 @@ public class SiegeCraft implements Listener {
                             if(getAmount(player,item)<item.getAmount()){
                                 this.data.showMessage(player.getUniqueId().toString(),
                                         "§c材料が足りないためクラフトができません！");
-                                player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE,2.0f,1.0f);
+                                player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_AMBIENT,2.0f,0.5f);
                                 return;
                             }
                         }
@@ -112,12 +111,17 @@ public class SiegeCraft implements Listener {
         if (arg1 == null)
             return 0;
         int amount = 0;
-        for (int i = 0; i < 36; i++) {
-            ItemStack slot = arg0.getInventory().getItem(i);
-            if (slot == null || slot.getType()!=arg1.getType()||slot.getDurability()!=arg1.getDurability()||slot.getItemMeta()!=arg1.getItemMeta())
-                continue;
-            amount += slot.getAmount();
+        for (ItemStack slot : arg0.getInventory().getContents()) {
+            if(slot!=null){
+                if(slot.getType() ==arg1.getType()){
+                    if(arg1.getItemMeta()==null||slot.getItemMeta().equals(arg1.getItemMeta())){
+                        amount = amount + slot.getAmount();
+                    }
+                }
+            }
+
         }
+        System.out.println(amount);
         return amount;
     }
 
