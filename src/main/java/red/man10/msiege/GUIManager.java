@@ -114,12 +114,14 @@ public class GUIManager implements Listener {
     public void openItemBank(Player p,InventoryAPI inv,boolean update) {
         inv.fillInv(new ItemStack(Material.STAINED_GLASS_PANE,1,(short)7));
         inv.setItems(new int[]{10,11,12,13,14,15,16},new ItemStack(Material.AIR));
-        inv.setItem(10,inv.createUnbitem("§f§l羊毛",
-                new String[]{"§a"+data.ibm.getItemStorage(p.getUniqueId().toString(),8).amount+"個所持しています","§f左クリックで1個","§f右クリックで1スタック 取り出します"}, Material.WOOL,0,false));
-        inv.setItem(11,inv.createUnbitem("§7§l丸石",
-                new String[]{"§a"+data.ibm.getItemStorage(p.getUniqueId().toString(),1).amount+"個所持しています","§f左クリックで1個","§f右クリックで1スタック 取り出します"}, Material.COBBLESTONE,0,false));
-        inv.setItem(12,inv.createUnbitem("§6§lオークの原木",
-                new String[]{"§a"+data.ibm.getItemStorage(p.getUniqueId().toString(),30).amount+"個所持しています","§f左クリックで1個","§f右クリックで1スタック 取り出します"}, Material.LOG,0,false));
+        Bukkit.getScheduler().runTaskAsynchronously(data.plugin, () -> {
+            inv.setItem(10,inv.createUnbitem("§f§l羊毛",
+                    new String[]{"§a"+data.ibm.getItemStorage(p.getUniqueId().toString(),8).amount+"個所持しています","§f左クリックで1個","§f右クリックで1スタック 取り出します"}, Material.WOOL,0,false));
+            inv.setItem(11,inv.createUnbitem("§7§l丸石",
+                    new String[]{"§a"+data.ibm.getItemStorage(p.getUniqueId().toString(),1).amount+"個所持しています","§f左クリックで1個","§f右クリックで1スタック 取り出します"}, Material.COBBLESTONE,0,false));
+            inv.setItem(12,inv.createUnbitem("§6§lオークの原木",
+                    new String[]{"§a"+data.ibm.getItemStorage(p.getUniqueId().toString(),30).amount+"個所持しています","§f左クリックで1個","§f右クリックで1スタック 取り出します"}, Material.LOG,0,false));
+        });
         inv.addOriginalListing(new InvListener(data.plugin,inv){
             @EventHandler
             public synchronized void onClick(InventoryClickEvent e){
@@ -216,14 +218,17 @@ public class GUIManager implements Listener {
         inv.fillInv(new ItemStack(Material.STAINED_GLASS_PANE,1,(short)7));
         inv.setItems(new int[]{10,11,12,13,14,15,16},new ItemStack(Material.AIR));
         inv.setItem(10,inv.createUnbitem("§3§l守れ！",
-                new String[]{"§aネザースターx10で購入できます。",
+                new String[]{"§aネザースターx10で指示できます。",
                         "§aチーム全体に3分間耐性1を付与します。"}, Material.SHIELD,0,false));
         inv.setItem(11,inv.createUnbitem("§3§l戦え！",
-                new String[]{"§aネザースターx10で購入できます。",
+                new String[]{"§aネザースターx10で指示できます。",
                         "§aチーム全体に3分間攻撃力上昇1を付与します。"}, Material.IRON_SWORD,0,false));
         inv.setItem(12,inv.createUnbitem("§3§l走れ！",
-                new String[]{"§aネザースターx10で購入できます。",
+                new String[]{"§aネザースターx10で指示できます。",
                         "§aチーム全体に3分間速度上昇1を付与します。"}, Material.CHAINMAIL_BOOTS,0,false));
+        inv.setItem(13,inv.createUnbitem("§3§l修理せよ！",
+                new String[]{"§aネザースターx20で指示できます。",
+                        "§aチーム全体のアーマーを修理しネクサスHPを+5します。"}, Material.ANVIL,0,false));
         inv.addOriginalListing(new InvListener(data.plugin,inv){
             @EventHandler
             public synchronized void onClick(InventoryClickEvent e){
@@ -234,10 +239,10 @@ public class GUIManager implements Listener {
                 e.setCancelled(true);
                 if(e.getSlot()==10){
                     if(team!=null){
-                        ItemStack item = new ItemStack(Material.NETHER_STAR);
+                        ItemStack item = new ItemStack(Material.NETHER_STAR,10);
                         if(SiegeCraft.getAmount((Player)e.getWhoClicked(),item)>=item.getAmount()){
-                            e.getWhoClicked().getInventory().remove(item);
-                            Bukkit.broadcastMessage(data.plugin.getPrefix()+"§a§l"+p.getName()+"§f§lが作戦を発動しました！");
+                            SiegeCraft.removeAmount(p,item,10);
+                            Bukkit.broadcastMessage(data.plugin.getPrefix()+"§a§l"+p.getName()+"§f§lが作戦「守れ！」を発動しました！");
                             data.playsoundAll(arenaname,Sound.ENTITY_ENDERDRAGON_AMBIENT,1f,0.5f);
                             for(UUID uuid:team.playerlist){
                                 if(Bukkit.getPlayer(uuid)!=null){
@@ -246,15 +251,15 @@ public class GUIManager implements Listener {
                                 }
                             }
                         }else{
-                            data.showMessage(p.getUniqueId().toString(),"§cネザースターが足りません! ネクサスにダメージを与えてゲットしましょう！");
+                            data.showMessage(p.getUniqueId().toString(),"§cネザースターが足りません! ネクサスにダメージが入るとゲットできます！");
                         }
                     }
                 }else if(e.getSlot()==11) {
                     if (team != null) {
-                        ItemStack item = new ItemStack(Material.NETHER_STAR);
+                        ItemStack item = new ItemStack(Material.NETHER_STAR,10);
                         if(SiegeCraft.getAmount((Player)e.getWhoClicked(),item)>=item.getAmount()){
-                            e.getWhoClicked().getInventory().remove(item);
-                            Bukkit.broadcastMessage(data.plugin.getPrefix()+"§a§l"+p.getName()+"§f§lが作戦を発動しました！");
+                            SiegeCraft.removeAmount(p,item,10);
+                            Bukkit.broadcastMessage(data.plugin.getPrefix()+"§a§l"+p.getName()+"§f§lが作戦「戦え！」を発動しました！");
                             data.playsoundAll(arenaname,Sound.ENTITY_ENDERDRAGON_AMBIENT,1f,0.5f);
                             for(UUID uuid:team.playerlist){
                                 if(Bukkit.getPlayer(uuid)!=null){
@@ -263,15 +268,15 @@ public class GUIManager implements Listener {
                                 }
                             }
                         }else{
-                            data.showMessage(p.getUniqueId().toString(),"§cネザースターが足りません! ネクサスにダメージを与えてゲットしましょう！");
+                            data.showMessage(p.getUniqueId().toString(),"§cネザースターが足りません! ネクサスにダメージが入るとゲットできます！");
                         }
                     }
                 }else if(e.getSlot()==12) {
                     if (team != null) {
-                        ItemStack item = new ItemStack(Material.NETHER_STAR);
+                        ItemStack item = new ItemStack(Material.NETHER_STAR,10);
                         if(SiegeCraft.getAmount((Player)e.getWhoClicked(),item)>=item.getAmount()){
-                            e.getWhoClicked().getInventory().remove(item);
-                            Bukkit.broadcastMessage(data.plugin.getPrefix()+"§a§l"+p.getName()+"§f§lが作戦を発動しました！");
+                            SiegeCraft.removeAmount(p,item,10);
+                            Bukkit.broadcastMessage(data.plugin.getPrefix()+"§a§l"+p.getName()+"§f§lが作戦「走れ！」を発動しました！");
                             data.playsoundAll(arenaname,Sound.ENTITY_ENDERDRAGON_AMBIENT,1f,0.5f);
                             for(UUID uuid:team.playerlist){
                                 if(Bukkit.getPlayer(uuid)!=null){
@@ -280,7 +285,40 @@ public class GUIManager implements Listener {
                                 }
                             }
                         }else{
-                            data.showMessage(p.getUniqueId().toString(),"§cネザースターが足りません! ネクサスにダメージを与えてゲットしましょう！");
+                            data.showMessage(p.getUniqueId().toString(),"§cネザースターが足りません! ネクサスにダメージが入るとゲットできます！");
+                        }
+                    }
+                }else if(e.getSlot()==13) {
+                    if (team != null) {
+                        ItemStack item = new ItemStack(Material.NETHER_STAR,20);
+                        if(SiegeCraft.getAmount((Player)e.getWhoClicked(),item)>=item.getAmount()){
+                            SiegeCraft.removeAmount(p,item,20);
+                            Bukkit.broadcastMessage(data.plugin.getPrefix()+"§a§l"+p.getName()+"§f§lが作戦「修理せよ!」を発動しました！");
+                            data.playsoundAll(arenaname,Sound.ENTITY_ENDERDRAGON_AMBIENT,1f,0.5f);
+                            for(UUID uuid:team.playerlist){
+                                if(Bukkit.getPlayer(uuid)!=null){
+                                    for(ItemStack i :Bukkit.getPlayer(uuid).getInventory().getArmorContents()){
+                                        if(i.getType()==Material.DIAMOND_HOE){
+                                            continue;
+                                        }
+                                        i.setDurability((short)0);
+                                    }
+                                    Bukkit.getPlayer(uuid).sendMessage(data.plugin.prefix+"§a"+p.getName()+": §f§l修理せよ！");
+                                }
+                            }
+                            int oldhp = team.nexushp;
+                            if(team.nexushp+5>data.getArena(arenaname).hp){
+                                team.nexushp = data.getArena(arenaname).hp;
+                            }else{
+                                team.nexushp = team.nexushp+5;
+                            }
+                            if(data.getArena(data.getStats(p.getUniqueId().toString()).getJoinarena()).team1.playerlist.contains(p.getUniqueId())){
+                                data.getArena(data.getStats(p.getUniqueId().toString()).getJoinarena()).updateScoreBoard_team1(oldhp);
+                            }else{
+                                data.getArena(data.getStats(p.getUniqueId().toString()).getJoinarena()).updateScoreBoard_team2(oldhp);
+                            }
+                        }else{
+                            data.showMessage(p.getUniqueId().toString(),"§cネザースターが足りません! ネクサスにダメージが入るとゲットできます！");
                         }
                     }
                 }
@@ -501,7 +539,7 @@ public class GUIManager implements Listener {
 
     public void settingPage(InventoryAPI inv,Player p,int page,boolean invnull){
         inv.clear();
-        inv.updateTitle(p,"§d§lM§7§lSiege §3§lカード設定 Page"+page);
+        inv.updateTitle(p,"§d§lM§7§lSiege §3§lカード設定 Page"+page +" §e残りコスト: "+data.getPlayerHaveCost(p));
         //ここに設定のことをかくぅー
         int pos = 0;
         int skip = 0;

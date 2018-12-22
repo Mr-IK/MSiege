@@ -1,11 +1,12 @@
 package red.man10.msiege;
 
-import org.bukkit.Bukkit;
-import org.bukkit.GameMode;
-import org.bukkit.Location;
-import org.bukkit.Sound;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -16,6 +17,7 @@ public class SiegeTeam {
     Location loc;
     Location nexusloc;
     Inventory teaminv;
+    BukkitRunnable iron = null;
 
     public SiegeTeam(){
         nexushp = 50;//200
@@ -43,6 +45,15 @@ public class SiegeTeam {
                 Bukkit.dispatchCommand(p,"ewarp minigame_lobby");
                 p.setGameMode(GameMode.SURVIVAL);
                 p.getInventory().clear();
+            }
+        }
+    }
+
+    public void sendActionBarAllPlayer(String msg){
+        for(UUID uuid : playerlist){
+            Player p = Bukkit.getPlayer(uuid);
+            if(p != null){
+                p.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(msg));
             }
         }
     }

@@ -16,6 +16,8 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
+import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.ItemStack;
@@ -38,7 +40,9 @@ public class SiegeArena implements Listener {
     SiegeTeam team1;
     SiegeTeam team2;
     int hp = 50;
+    Location lobbyloc;
 
+    ArrayList<Block> placeblocklist = new ArrayList<>();
 
 
     SBossBar bar = null;
@@ -46,8 +50,7 @@ public class SiegeArena implements Listener {
 
     int wave = -1;
     int respawntime = 5;
-
-    ArrayList<Block> placeblocklist = new ArrayList<>();
+    ArrayList<UUID> votedamount = new ArrayList<>();
 
     static ArrayList<Material> stoneblocks = new ArrayList<>();
     static ArrayList<Material> dirtblocks = new ArrayList<>();
@@ -84,13 +87,14 @@ public class SiegeArena implements Listener {
         uniqueGameID = UUID.randomUUID();
     }
 
+
     @EventHandler
     public void onBlockPlaced(BlockPlaceEvent e){
         if(nowgame){
             if(team1.playerlist.contains(e.getPlayer().getUniqueId())||team2.playerlist.contains(e.getPlayer().getUniqueId())){
                 if(e.getBlock().getLocation().getWorld().getName().equalsIgnoreCase(worldname)){
                     if(!placeblocklist.contains(e.getBlock())){
-                        if(stoneblocks.contains(e.getBlock().getType())||dirtblocks.contains(e.getBlock().getType())||woodblocks.contains(e.getBlock().getType())||Material.WOOL==e.getBlock().getType()){
+                        if(stoneblocks.contains(e.getBlock().getType())||dirtblocks.contains(e.getBlock().getType())||woodblocks.contains(e.getBlock().getType())||Material.WOOL==e.getBlock().getType()||Material.GLASS==e.getBlock().getType()){
                             if(team1.getLoc().distance(e.getBlock().getLocation())<5&&team2.playerlist.contains(e.getPlayer().getUniqueId())){
                                 e.setCancelled(true);
                                 data.showMessage(e.getPlayer().getUniqueId().toString(),"§c相手のチームのリス地半径5ブロック以内にはブロックを置けません！");
@@ -111,18 +115,19 @@ public class SiegeArena implements Listener {
         }
     }
 
+
     @EventHandler
     public void onMove(PlayerMoveEvent e) {
         if(nowgame) {
             if (team1.playerlist.contains(e.getPlayer().getUniqueId()) || team2.playerlist.contains(e.getPlayer().getUniqueId())) {
                 if(team1.getNexusloc().distance(e.getTo())>15&&team1.playerlist.contains(e.getPlayer().getUniqueId())){
                     if (wave == 0) {
-                        e.setCancelled(true);
+                        e.getPlayer().teleport(team1.loc);
                         data.showMessage(e.getPlayer().getUniqueId().toString(),"§c準備ウェーブ中はネクサスから半径15ブロック以上には移動できません！");
                     }
                 }else if(team2.getNexusloc().distance(e.getTo())>15&&team2.playerlist.contains(e.getPlayer().getUniqueId())){
                     if (wave == 0) {
-                        e.setCancelled(true);
+                        e.getPlayer().teleport(team2.loc);
                         data.showMessage(e.getPlayer().getUniqueId().toString(),"§c準備ウェーブ中はネクサスから半径15ブロック以上には移動できません！");
                     }
                 }
@@ -215,7 +220,7 @@ public class SiegeArena implements Listener {
     }
 
     public void initBossbar(){
-        bar = new SBossBar("§a§l準備ウェーブ: 残り5:00",BarColor.WHITE);
+        bar = new SBossBar("§a§l準備ウェーブ: 残り3:00",BarColor.WHITE);
         for(UUID uuid:team1.playerlist){
             Player p = Bukkit.getPlayer(uuid);
             if(p != null){
@@ -230,7 +235,7 @@ public class SiegeArena implements Listener {
         }
         bar.setVisible(true);
         BukkitRunnable task = new BukkitRunnable()  {
-            int time = 300;
+            int time = 180;
             UUID gameid = getUniqueGameID();
             @Override
             public void run(){
@@ -246,7 +251,7 @@ public class SiegeArena implements Listener {
                     return;
                 }
                 bar.setTitle("§a§l準備ウェーブ: 残り"+inttotimestring(time));
-                bar.takeProgress(0.00333);
+                bar.takeProgress(0.005555);
             }
         };
         task.runTaskTimer(data.plugin,0,20);
@@ -453,6 +458,26 @@ public class SiegeArena implements Listener {
     }
 
     @EventHandler
+    public void onBukkitFill(PlayerBucketFillEvent event){
+        if (!event.getBucket().equals(Material.WATER_BUCKET)&&!event.getBucket().equals(Material.LAVA_BUCKET))
+            return;
+        Block water = event.getBlockClicked().getRelative(event.getBlockFace());
+        if(!placeblocklist.contains(water)){
+            event.setCancelled(true);
+            return;
+        }
+        placeblocklist.remove(water);
+    }
+
+    @EventHandler
+    public void onBucketEmpty(PlayerBucketEmptyEvent event) {
+        if (!event.getBucket().equals(Material.WATER_BUCKET)&&!event.getBucket().equals(Material.LAVA_BUCKET))
+            return;
+        Block water = event.getBlockClicked().getRelative(event.getBlockFace());
+        placeblocklist.add(water);
+    }
+
+    @EventHandler
     public void onBlockBreaked(BlockBreakEvent e) {
         if (nowgame) {
             if (team1.playerlist.contains(e.getPlayer().getUniqueId()) || team2.playerlist.contains(e.getPlayer().getUniqueId())) {
@@ -465,7 +490,7 @@ public class SiegeArena implements Listener {
                                 placeblocklist.remove(e.getBlock());
                             } else if (woodblocks.contains(e.getBlock().getType()) && checkAxe(e.getPlayer().getInventory().getItemInMainHand().getType())) {
                                 placeblocklist.remove(e.getBlock());
-                            } else {
+                            }else{
                                 data.showMessage(e.getPlayer().getUniqueId().toString(), "§cブロックに対して対応するツールを使用しないと破壊できません！");
                                 data.showMessage(e.getPlayer().getUniqueId().toString(), "§7石系: ツルハシ  §6土系: シャベル  §e木材系: 斧  §f羊毛:  ハサミ(その他ツール)");
                                 e.setCancelled(true);
@@ -473,11 +498,30 @@ public class SiegeArena implements Listener {
                         } else if (Material.WOOL == e.getBlock().getType()) {
                             if (Material.SHEARS == e.getPlayer().getInventory().getItemInMainHand().getType() || checkAxe(e.getPlayer().getInventory().getItemInMainHand().getType()) || checkPickaxe(e.getPlayer().getInventory().getItemInMainHand().getType()) || checkShovel(e.getPlayer().getInventory().getItemInMainHand().getType())) {
                                 placeblocklist.remove(e.getBlock());
-                            } else {
+                            }else{
                                 data.showMessage(e.getPlayer().getUniqueId().toString(), "§cハサミorその他のツールを使用しないと破壊できません！");
                                 e.setCancelled(true);
                             }
+                        } else if (Material.GLASS == e.getBlock().getType()) {
+                            placeblocklist.remove(e.getBlock());
                         }
+                    } else if (Material.IRON_ORE.equals(e.getBlock().getType())) {
+                        BukkitRunnable task = new BukkitRunnable()  {
+                            Material type = e.getBlock().getType();
+                            byte b = e.getBlock().getData();
+                            @Override
+                            public void run(){
+                                e.getBlock().setType(type);
+                                e.getBlock().setData(b);
+                                breakores.remove(this);
+                                this.cancel();
+                            }
+                        };
+                        task.runTaskTimer(data.plugin,400,0);
+                        breakores.add(task);
+                        e.setCancelled(true);
+                        e.getBlock().setType(Material.AIR);
+                        e.getPlayer().getInventory().addItem(new ItemStack(Material.IRON_INGOT));
                     } else if (team1.nexusloc.equals(e.getBlock().getLocation()) && team1.playerlist.contains(e.getPlayer().getUniqueId())
                             || team2.nexusloc.equals(e.getBlock().getLocation()) & team2.playerlist.contains(e.getPlayer().getUniqueId())) {
                         data.showMessage(e.getPlayer().getUniqueId().toString(), "§c自チームのネクサスは破壊できません！");
@@ -494,12 +538,10 @@ public class SiegeArena implements Listener {
                         int oldhp = team1.nexushp;
                         team1.damagenexus(1);
                         updateScoreBoard_team1(oldhp);
-                        data.showMessage(e.getPlayer().getUniqueId().toString(), "§c相手チームのネクサスにダメージを与えました！ +1NS 残りHP: §6" + team1.nexushp);
+                        data.showMessage(e.getPlayer().getUniqueId().toString(), "§c相手チームのネクサスにダメージを与えました！ 残りHP: §6" + team1.nexushp);
                         team1.teaminv.addItem(new ItemStack(Material.NETHER_STAR));
                         e.setCancelled(true);
                         if (team1.nexushp <= 0) {
-                            team1.nexushp = 200;
-                            team2.nexushp = 200;
                             data.gameEnd(name, 2);
                         }
                     } else if (team2.nexusloc.equals(e.getBlock().getLocation()) && team1.playerlist.contains(e.getPlayer().getUniqueId())) {
@@ -515,20 +557,29 @@ public class SiegeArena implements Listener {
                         team2.damagenexus(1);
                         updateScoreBoard_team2(oldhp);
                         e.setCancelled(true);
-                        data.showMessage(e.getPlayer().getUniqueId().toString(), "§c相手チームのネクサスにダメージを与えました！ +1NS 残りHP: §6" + team2.nexushp);
+                        data.showMessage(e.getPlayer().getUniqueId().toString(), "§c相手チームのネクサスにダメージを与えました！ 残りHP: §6" + team2.nexushp);
                         team2.teaminv.addItem(new ItemStack(Material.NETHER_STAR));
+                        team1.sendActionBarAllPlayer("§f§l"+e.getPlayer().getName()+"§c§lが相手のネクサスにダメージを与えました！ 残りHP: §6§l" + team2.nexushp);
                         if (team2.nexushp <= 0) {
                             data.gameEnd(name, 1);
-                            team1.nexushp = hp;
-                            team2.nexushp = hp;
                         }
-                    } else {
+                    }else{
                         data.showMessage(e.getPlayer().getUniqueId().toString(), "§c初期から配置されているブロックは壊せません！");
                         e.setCancelled(true);
                     }
                 }
             }
         }
+    }
+
+    ArrayList<BukkitRunnable> breakores = new ArrayList<>();
+
+    public void resetores(){
+        for(BukkitRunnable run : breakores){
+            run.run();
+            run.cancel();
+        }
+        breakores = new ArrayList<>();
     }
 
     @EventHandler
@@ -567,6 +618,7 @@ public class SiegeArena implements Listener {
             try {
                 data.set("name", name);
                 data.set("worldname", worldname);
+                data.set("lobby", lobbyloc);
                 data.set("team1.loc", team1.getLoc());
                 data.set("team1.nexusloc", team1.getNexusloc());
                 data.set("team2.loc", team2.getLoc());
@@ -594,6 +646,7 @@ public class SiegeArena implements Listener {
         if (f.exists()) {
             name = data.getString("name");
             worldname = data.getString("worldname");
+            lobbyloc = (Location) data.get("lobby");
             SiegeTeam team1 = new SiegeTeam();
             team1.loc = (Location) data.get("team1.loc");
             team1.nexusloc = (Location) data.get("team1.nexusloc");
@@ -624,7 +677,7 @@ public class SiegeArena implements Listener {
             }
         };
 
-        task.runTaskTimer(data.plugin,0,2);
+        task.runTaskTimer(data.plugin,0,1);
     }
 
     public String getName() {

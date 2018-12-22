@@ -15,7 +15,7 @@ public final class MSiege extends JavaPlugin {
     String prefix = "§3[§dM§7Siege§3]§r";
     String prefix_nosec = "[MSiege]";
 
-    String buildcode = "v1.0-α-0110";
+    String buildcode = "v1.0-β-001";
 
     @Override
     public void onEnable() {
@@ -36,9 +36,6 @@ public final class MSiege extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
-        for(PlayerStats stats : data.playerstats){
-            stats.saveFile();
-        }
     }
 
     public String getPrefix(){

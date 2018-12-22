@@ -74,7 +74,7 @@ public class SiegeCraft implements Listener {
                     }
                     data.cmd.gui.openItemBank(player, new InventoryAPI(data.plugin, "§d§lM§7§lSiege §3§lItemBank", 27),false);
                     return;
-                }else if(block.getType() == Material.TRAPPED_CHEST) {
+                }else if(block.getType() == Material.ENCHANTMENT_TABLE) {
                     e.setCancelled(true);
                     data.cmd.gui.openNexusShop(player,data.tc.getTeam(player),data.getStats(player.getUniqueId().toString()).getJoinarena());
                     return;
@@ -93,7 +93,7 @@ public class SiegeCraft implements Listener {
                         }
                         player.playSound(player.getLocation(), Sound.BLOCK_ANVIL_USE,2.0f,1.0f);
                         for(ItemStack item:data.useitems){
-                            player.getInventory().remove(item);
+                            removeAmount(player,item,item.getAmount());
                         }
                         player.getInventory().addItem(data.result);
                         this.data.showMessage(player.getUniqueId().toString(),
@@ -121,8 +121,29 @@ public class SiegeCraft implements Listener {
             }
 
         }
-        System.out.println(amount);
         return amount;
+    }
+
+    public static void removeAmount(Player arg0, ItemStack arg1,int i) {
+        if (arg1 == null)
+            return;
+        int amount = i;
+        for (ItemStack slot : arg0.getInventory().getContents()) {
+            if(slot!=null){
+                if(slot.getType() ==arg1.getType()){
+                    if(arg1.getItemMeta()==null||slot.getItemMeta().equals(arg1.getItemMeta())){
+                        if(amount<slot.getAmount()){
+                            slot.setAmount(slot.getAmount()-amount);
+                            break;
+                        }else{
+                            amount = amount - slot.getAmount();
+                            slot.setAmount(0);
+                        }
+                    }
+                }
+            }
+
+        }
     }
 
     @EventHandler

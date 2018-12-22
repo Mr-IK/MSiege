@@ -99,15 +99,35 @@ public class SiegeCard {
             for(ItemStack item: item){
                 if(count<=args.length-1){
                     if(args[count].equalsIgnoreCase("helmet")){
+                        if(p.getInventory().getHelmet()!=null){
+                            p.getInventory().addItem(item);
+                            count++;
+                            continue;
+                        }
                         p.getInventory().setHelmet(item);
                         count++;
                     }else if(args[count].equalsIgnoreCase("chestplate")){
+                        if(p.getInventory().getChestplate()!=null){
+                            p.getInventory().addItem(item);
+                            count++;
+                            continue;
+                        }
                         p.getInventory().setChestplate(item);
                         count++;
                     }else if(args[count].equalsIgnoreCase("legging")){
+                        if(p.getInventory().getLeggings()!=null){
+                            p.getInventory().addItem(item);
+                            count++;
+                            continue;
+                        }
                         p.getInventory().setLeggings(item);
                         count++;
                     }else if(args[count].equalsIgnoreCase("boot")){
+                        if(p.getInventory().getBoots()!=null){
+                            p.getInventory().addItem(item);
+                            count++;
+                            continue;
+                        }
                         p.getInventory().setBoots(item);
                         count++;
                     }

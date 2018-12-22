@@ -39,5 +39,6 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="Maven: com.sk89q.worldedit:worldedit-bukkit:6.1.5" level="project" />
   </component>
 </module>

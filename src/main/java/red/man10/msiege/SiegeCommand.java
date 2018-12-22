@@ -82,8 +82,17 @@ public class SiegeCommand implements CommandExecutor,Listener{
                     data.showMessage(p.getUniqueId().toString(),"§c"+arena.getName()+"は現在ゲーム中です！");
                     return true;
                 }
-                arena.team1.playerlist.remove(p.getUniqueId());
-                arena.team2.playerlist.remove(p.getUniqueId());
+                if(arena.team1.playerlist.contains(p.getUniqueId())){
+                    arena.team1.playerlist.remove(p.getUniqueId());
+                }else{
+                    arena.team2.playerlist.remove(p.getUniqueId());
+                }
+                p.getInventory().clear();
+                arena.votedamount.remove(p.getUniqueId());
+                PlayerStats stats = data.getStats(p.getUniqueId().toString());
+                stats.resetJoinArena();
+                stats.setJoingameuniqueid(null);
+                stats.saveFile();
                 data.showMessage(p.getUniqueId().toString(),"§a"+arena.getName()+"から抜けました");
             }else if(args[0].equalsIgnoreCase("stop1")){
                 if (!p.hasPermission("siege.setup")) {
@@ -129,6 +138,7 @@ public class SiegeCommand implements CommandExecutor,Listener{
                     p.sendMessage("§c/" + cmd + " nexusloc2 [アリーナ名] : アリーナのネクサス2をセット");
                     p.sendMessage("§c/" + cmd + " world [アリーナ名] : 今いるワールドをマップとしてセット");
                     p.sendMessage("§c/" + cmd + " save [アリーナ名] : アリーナのデータをセーブ");
+                    p.sendMessage("§c/" + cmd + " setlobby [アリーナ名] : アリーナのデータをセーブ");
                     p.sendMessage("§c/" + cmd + " stop1 : ゲームを強制終了(team1勝利)する");
                     p.sendMessage("§c/" + cmd + " stop2 : ゲームを強制終了(team2勝利)する");
                     p.sendMessage("§c-------------Card関連-------------");
@@ -151,7 +161,6 @@ public class SiegeCommand implements CommandExecutor,Listener{
                     p.sendMessage("§c/" + cmd + " shoprel : shopをリロードします。");
                     p.sendMessage("§c/" + cmd + " addshop [name] [buy] : shopの品を追加します");
                     p.sendMessage("§c-------------Craft関連-------------");
-                    p.sendMessage("§c/" + cmd + " craftrel : craftをリロードします。");
                     p.sendMessage("§c/" + cmd + " craftnew [name] : craftをセットアップします");
                     p.sendMessage("§c/" + cmd + " craft setitem: craftの発動アイテムをセットします");
                     p.sendMessage("§c/" + cmd + " craft adduse: craftの材料をセットします");
@@ -315,7 +324,17 @@ public class SiegeCommand implements CommandExecutor,Listener{
                 }
                 arenasetup.put(p.getUniqueId(),data.getArena(args[1]));
                 data.showMessage(p.getUniqueId().toString(),"§a再セットアップを開始しました。");
-
+            }else if(args[0].equalsIgnoreCase("setlobby")) {
+                if (!p.hasPermission("siege.setup")) {
+                    p.sendMessage(data.plugin.getPrefix() + "§cあなたには権限がありません！");
+                    return true;
+                }
+                if(!arenasetup.containsKey(p.getUniqueId())){
+                    data.showMessage(p.getUniqueId().toString(),"§cセットアップ/再設定が開始されていません！ もしかして: /"+cmd+" create/update "+args[1]);
+                    return true;
+                }
+                arenasetup.get(p.getUniqueId()).lobbyloc = p.getLocation();
+                data.showMessage(p.getUniqueId().toString(),"§aロビーをセットしました。");
             }else if(args[0].equalsIgnoreCase("loc1")) {
                 if (!p.hasPermission("siege.setup")) {
                     p.sendMessage(data.plugin.getPrefix() + "§cあなたには権限がありません！");

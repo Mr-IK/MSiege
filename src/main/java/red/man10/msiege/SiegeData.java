@@ -2,19 +2,21 @@ package red.man10.msiege;
 
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.Material;
 import org.bukkit.Sound;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.event.player.*;
+import org.bukkit.inventory.ItemFlag;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.potion.PotionEffect;
 import red.man10.msiege.util.NameTagManager;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 public class SiegeData implements Listener {
 
@@ -54,6 +56,7 @@ public class SiegeData implements Listener {
         new SiegeCommand(this,"siege");
         tc = new TeamChat(this);
         ntm = new NameTagManager(this);
+        initGameItem();
     }
 
     @EventHandler
@@ -128,6 +131,9 @@ public class SiegeData implements Listener {
         }else{
             arena.team2.playerlist.remove(e.getPlayer().getUniqueId());
         }
+        arena.votedamount.remove(e.getPlayer().getUniqueId());
+        e.getPlayer().getInventory().clear();
+        stats.saveInv();
         stats.resetJoinArena();
         stats.setJoingameuniqueid(null);
         stats.saveFile();
@@ -327,6 +333,9 @@ public class SiegeData implements Listener {
                 startarena.craft.playerlist.add(uuid);
                 ntm.setTag(Bukkit.getPlayer(uuid),"§a[TEAM]§c",null,player);
                 ntm.setTag(Bukkit.getPlayer(uuid),"§4[Enemy]§c",null,player2);
+                for (PotionEffect effect :Bukkit.getPlayer(uuid).getActivePotionEffects ()){
+                    Bukkit.getPlayer(uuid).removePotionEffect (effect.getType ());
+                }
             }
         }
         for(UUID uuid : startarena.team2.playerlist){
@@ -336,6 +345,9 @@ public class SiegeData implements Listener {
                 startarena.craft.playerlist.add(uuid);
                 ntm.setTag(Bukkit.getPlayer(uuid),"§a[TEAM]§b",null,player2);
                 ntm.setTag(Bukkit.getPlayer(uuid),"§4[Enemy]§b",null,player);
+                for (PotionEffect effect :Bukkit.getPlayer(uuid).getActivePotionEffects ()){
+                    Bukkit.getPlayer(uuid).removePotionEffect (effect.getType ());
+                }
             }
         }
         enabledPlayersCard(startarena.getName());
@@ -343,10 +355,11 @@ public class SiegeData implements Listener {
         startarena.setCanjoin(false);
         startarena.setNowgame(true);
         startarena.setWave(0);
-        Bukkit.broadcastMessage(plugin.getPrefix()+"§aさあ！準備せよ！ 準備ウェーブが開始されました！ §6終了まで: 5分");
+        Bukkit.broadcastMessage(plugin.getPrefix()+"§aさあ！準備せよ！ 準備ウェーブが開始されました！ §6終了まで: 3分");
         playsoundAll(arenaname,Sound.ENTITY_ENDERDRAGON_AMBIENT,0.5f,1.0f);
-        startarena.initBossbar();
         startarena.initScoreBoard();
+        showBattleTitle(arenaname,"§a§lゲーム開始！","§6いけえええ！");
+        startarena.initBossbar();
         Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
             if(!startarena.nowgame||startarena.getUniqueGameID()==null||!gameid.equals(startarena.getUniqueGameID())){
                 return;
@@ -355,6 +368,7 @@ public class SiegeData implements Listener {
             startarena.updateScoreBoard_wave(0);
             Bukkit.broadcastMessage(plugin.getPrefix()+"§a突撃の時だ！ ウェーブ1が開始されました！ §6終了まで: 10分");
             playsoundAll(arenaname,Sound.ENTITY_ENDERDRAGON_AMBIENT,0.5f,1.0f);
+            showBattleTitle(arenaname,"§a§lウェーブ1開始!","§e突撃だ！");
             Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
                 if(!startarena.nowgame||startarena.getUniqueGameID()==null||!gameid.equals(startarena.getUniqueGameID())){
                     return;
@@ -363,6 +377,7 @@ public class SiegeData implements Listener {
                 startarena.updateScoreBoard_wave(1);
                 Bukkit.broadcastMessage(plugin.getPrefix()+"§aさあ、倒せ！ ウェーブ2が開始されました！ §6終了まで: 10分");
                 playsoundAll(arenaname,Sound.ENTITY_ENDERDRAGON_AMBIENT,0.5f,1.0f);
+                showBattleTitle(arenaname,"§a§lウェーブ2開始!","§eブッ倒せ！");
                 Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
                     if(!startarena.nowgame||startarena.getUniqueGameID()==null||!gameid.equals(startarena.getUniqueGameID())){
                         return;
@@ -371,6 +386,7 @@ public class SiegeData implements Listener {
                     startarena.updateScoreBoard_wave(2);
                     Bukkit.broadcastMessage(plugin.getPrefix()+"§a後がないぞ！ ウェーブ3が開始されました！ §6終了まで: 10分");
                     playsoundAll(arenaname,Sound.ENTITY_ENDERDRAGON_AMBIENT,0.5f,1.0f);
+                    showBattleTitle(arenaname,"§a§lウェーブ3開始!","§e急げ！");
                     Bukkit.getScheduler().scheduleSyncDelayedTask(plugin, () -> {
                         if(!startarena.nowgame||startarena.getUniqueGameID()==null||!gameid.equals(startarena.getUniqueGameID())){
                             return;
@@ -379,10 +395,11 @@ public class SiegeData implements Listener {
                         startarena.updateScoreBoard_wave(3);
                         Bukkit.broadcastMessage(plugin.getPrefix()+"§4§l終わらねぇ！  サドンデスが開始されました！ §c終了まで: ∞分");
                         playsoundAll(arenaname,Sound.ENTITY_ENDERDRAGON_AMBIENT,0.5f,1.0f);
+                        showBattleTitle(arenaname,"§4§lサドンデス開始!!","§c§l殺しあえ！！");
                     },12000);
                 },12000);
             },12000);
-        },6000); //6000
+        },3600); //6000
     }
 
     public void gameJoin(String arenaname,Player p){
@@ -423,6 +440,97 @@ public class SiegeData implements Listener {
                 showMessage(uuid.toString(),"§a"+p.getName()+"さんが参加しました");
             }
         }
+        p.teleport(getArena(arenaname).lobbyloc);
+        p.getInventory().clear();
+        addGameItem(p);
+    }
+
+    ItemStack leave = null;
+    ItemStack startvote = null;
+
+    public void addGameItem(Player p){
+        p.getInventory().setItem(0,startvote);
+        p.getInventory().setItem(8,leave);
+    }
+
+    private void initGameItem(){
+        leave = createUnbitem("§cゲームを抜ける",new String[]{"§eクリックでゲームを抜けます"},Material.DARK_OAK_DOOR_ITEM,0,false);
+        startvote = createUnbitem("§aゲーム開始に投票",new String[]{"§eクリックでゲームを開始に投票します"},Material.DIAMOND,0,false);
+    }
+
+    @EventHandler
+    public void commandCancel(PlayerCommandPreprocessEvent e) {
+        Player p = e.getPlayer();
+        PlayerStats stats = getStats(p.getUniqueId().toString());
+        if(stats.getJoinarena()==null||getArena(stats.getJoinarena())==null
+                ||stats.getJoingameuniqueid()==null||!getArena(stats.getJoinarena()).getUniqueGameID().equals(stats.getJoingameuniqueid())){
+            return;
+        }
+        if(e.getMessage().startsWith("/msi")||e.getMessage().startsWith("/siege")||e.getMessage().startsWith("/tc")){
+            return;
+        }
+        if(p.isOp()){
+            return;
+        }
+        e.setCancelled(true);
+        showMessage(p.getUniqueId().toString(),"§cゲームに参加中はコマンドを実行できません！");
+    }
+
+    @EventHandler
+    public void onDropItem(PlayerDropItemEvent e){
+        if(e.getItemDrop()!=null) {
+            if (e.getItemDrop().getItemStack().equals(startvote)||e.getItemDrop().getItemStack().equals(leave)) {
+                e.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void Intract(PlayerInteractEvent e) {
+        Player player = e.getPlayer();
+        if(player.getInventory().getItemInMainHand()!=null){
+            if(player.getInventory().getItemInMainHand().equals(startvote)){
+                e.setCancelled(true);
+                //スタートに投票
+                SiegeArena arena = getArena(getStats(player.getUniqueId().toString()).getJoinarena());
+                if(arena.team1.playerlist.size()+arena.team2.playerlist.size()<2){ //6
+                    showMessage(player.getUniqueId().toString(),"§cプレイヤー数が足りないためスタートに投票できません!");
+                    return;
+                }
+                if(arena.votedamount.contains(player.getUniqueId())){
+                    showMessage(player.getUniqueId().toString(),"§cすでに投票しています！");
+                    return;
+                }
+                arena.votedamount.add(player.getUniqueId());
+                showMessage(player.getUniqueId().toString(),"§aスタートに投票しました "+
+                        (arena.team1.playerlist.size()+arena.team2.playerlist.size())+"人中"+arena.votedamount.size()+"人投票 " +
+                        "§e"+((double)arena.votedamount.size()/(arena.team1.playerlist.size()+arena.team2.playerlist.size())*100)+"%");
+                if(((double)arena.votedamount.size()/(arena.team1.playerlist.size()+arena.team2.playerlist.size()))>=0.75){
+                    showBattleMessage(arena.name,"§a§l75%以上の人がスタートに投票したので開始します！");
+                    gameStart(arena.name);
+                }
+            }else if(player.getInventory().getItemInMainHand().equals(leave)){
+                e.setCancelled(true);
+                Bukkit.dispatchCommand(player,"ewarp minigame_lobby");
+                Bukkit.dispatchCommand(player,"msi leave");
+            }
+        }
+    }
+
+    public ItemStack createUnbitem(String name, String[] lore, Material item, int dura, boolean pikapika){
+        ItemStack items = new ItemStack(item,1,(short)dura);
+        ItemMeta meta = items.getItemMeta();
+        meta.setLore(Arrays.asList(lore));
+        meta.setDisplayName(name);
+        meta.addItemFlags(ItemFlag.HIDE_UNBREAKABLE);
+        meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
+        if(pikapika){
+            meta.addEnchant(Enchantment.ARROW_FIRE,1,true);
+            meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        }
+        meta.setUnbreakable(true);
+        items.setItemMeta(meta);
+        return items;
     }
 
     public void gameEnd(String arenaname,int winteam){
@@ -430,6 +538,7 @@ public class SiegeData implements Listener {
         if(startarena==null){
             return;
         }
+        showBattleTitle(arenaname,"§a§lゲーム終了！","§eお疲れ！");
         startarena.team1.tptoLobbyAllplayer();
         startarena.team2.tptoLobbyAllplayer();
         startarena.setWave(-1);
@@ -440,8 +549,12 @@ public class SiegeData implements Listener {
                 if(Bukkit.getPlayer(uuid)!=null) {
                     getStats(Bukkit.getPlayer(uuid).getUniqueId().toString()).setPoint(getStats(Bukkit.getPlayer(uuid).getUniqueId().toString()).getPoint() + 50);
                     getStats(Bukkit.getPlayer(uuid).getUniqueId().toString()).setWin(getStats(Bukkit.getPlayer(uuid).getUniqueId().toString()).getWin() + 1);
+                    getStats(Bukkit.getPlayer(uuid).getUniqueId().toString()).saveFile();
                     ntm.allplayerReset(Bukkit.getPlayer(uuid));
                     Bukkit.getPlayer(uuid).getEnderChest().clear();
+                    for (PotionEffect effect :Bukkit.getPlayer(uuid).getActivePotionEffects ()){
+                        Bukkit.getPlayer(uuid).removePotionEffect (effect.getType ());
+                    }
                 }
                 Bukkit.broadcastMessage(plugin.getPrefix()+"§b"+Bukkit.getOfflinePlayer(uuid).getName());
             }
@@ -449,8 +562,12 @@ public class SiegeData implements Listener {
                 if(Bukkit.getPlayer(uuid)!=null) {
                     getStats(Bukkit.getPlayer(uuid).getUniqueId().toString()).setPoint(getStats(Bukkit.getPlayer(uuid).getUniqueId().toString()).getPoint() + 10);
                     getStats(Bukkit.getPlayer(uuid).getUniqueId().toString()).setLose(getStats(Bukkit.getPlayer(uuid).getUniqueId().toString()).getLose() + 1);
+                    getStats(Bukkit.getPlayer(uuid).getUniqueId().toString()).saveFile();
                     ntm.allplayerReset(Bukkit.getPlayer(uuid));
                     Bukkit.getPlayer(uuid).getEnderChest().clear();
+                    for (PotionEffect effect :Bukkit.getPlayer(uuid).getActivePotionEffects ()){
+                        Bukkit.getPlayer(uuid).removePotionEffect (effect.getType ());
+                    }
                 }
             }
         }else if(winteam==2){
@@ -458,8 +575,12 @@ public class SiegeData implements Listener {
                 if(Bukkit.getPlayer(uuid)!=null) {
                     getStats(Bukkit.getPlayer(uuid).getUniqueId().toString()).setPoint(getStats(Bukkit.getPlayer(uuid).getUniqueId().toString()).getPoint() + 50);
                     getStats(Bukkit.getPlayer(uuid).getUniqueId().toString()).setWin(getStats(Bukkit.getPlayer(uuid).getUniqueId().toString()).getWin() + 1);
+                    getStats(Bukkit.getPlayer(uuid).getUniqueId().toString()).saveFile();
                     ntm.allplayerReset(Bukkit.getPlayer(uuid));
                     Bukkit.getPlayer(uuid).getEnderChest().clear();
+                    for (PotionEffect effect :Bukkit.getPlayer(uuid).getActivePotionEffects ()){
+                        Bukkit.getPlayer(uuid).removePotionEffect (effect.getType ());
+                    }
                 }
                 Bukkit.broadcastMessage(plugin.getPrefix()+"§b"+Bukkit.getOfflinePlayer(uuid).getName());
             }
@@ -467,8 +588,12 @@ public class SiegeData implements Listener {
                 if(Bukkit.getPlayer(uuid)!=null) {
                     getStats(Bukkit.getPlayer(uuid).getUniqueId().toString()).setPoint(getStats(Bukkit.getPlayer(uuid).getUniqueId().toString()).getPoint() + 10);
                     getStats(Bukkit.getPlayer(uuid).getUniqueId().toString()).setLose(getStats(Bukkit.getPlayer(uuid).getUniqueId().toString()).getLose() + 1);
+                    getStats(Bukkit.getPlayer(uuid).getUniqueId().toString()).saveFile();
                     ntm.allplayerReset(Bukkit.getPlayer(uuid));
                     Bukkit.getPlayer(uuid).getEnderChest().clear();
+                    for (PotionEffect effect :Bukkit.getPlayer(uuid).getActivePotionEffects ()){
+                        Bukkit.getPlayer(uuid).removePotionEffect (effect.getType ());
+                    }
                 }
             }
         }
@@ -483,6 +608,8 @@ public class SiegeData implements Listener {
         startarena.generateUniqueID();
         startarena.team1.nexushp = startarena.hp;
         startarena.team2.nexushp = startarena.hp;
+        startarena.votedamount.clear();
+        startarena.resetores();
         startarena.resetWorld();
     }
 
@@ -501,6 +628,23 @@ public class SiegeData implements Listener {
             Player p = Bukkit.getPlayer(uuid);
             if(p != null){
                 showMessage(uuid.toString(),message);
+            }
+        }
+    }
+
+    void showBattleTitle(String arena,String title,String subtitle){
+        for(UUID uuid:getArena(arena).team1.playerlist){
+            Player p = Bukkit.getPlayer(uuid);
+            if(p != null){
+                p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SPAWN,1,1);
+                p.sendTitle(title,subtitle,10,60,10);
+            }
+        }
+        for(UUID uuid:getArena(arena).team2.playerlist){
+            Player p = Bukkit.getPlayer(uuid);
+            if(p != null){
+                p.playSound(p.getLocation(), Sound.ENTITY_WITHER_SPAWN,1,1);
+                p.sendTitle(title,subtitle,10,60,10);
             }
         }
     }
