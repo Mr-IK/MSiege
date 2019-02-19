@@ -29,8 +29,12 @@ public class SiegeData implements Listener {
     ArrayList<PlayerStats> playerstats;
     ArrayList<SiegeCard> cardlist;
     ArrayList<SiegeArena> arenalist;
+    SiegeJob job;
+
+    int min_player;
 
     public SiegeData(MSiege plugin){
+        min_player = plugin.config.getInt("min_player");
         Bukkit.getServer().getPluginManager().registerEvents(this,plugin);
         this.plugin = plugin;
         mysql = plugin.mysql;
@@ -38,6 +42,7 @@ public class SiegeData implements Listener {
         arenalist = new ArrayList<>();
         cardlist = new ArrayList<>();
         playerstats = new ArrayList<>();
+        job = new SiegeJob(this);
         for(String str: list()){
             SiegeArena arena = new SiegeArena(this,str);
             arena.loadFile();
@@ -51,6 +56,10 @@ public class SiegeData implements Listener {
         for(String str: cardlist()){
             SiegeCard card = new SiegeCard(this,str,false);
             cardlist.add(card);
+        }
+        for(String str: joblist()){
+            JobData jobdata = new JobData(job,str);
+            job.joblist.add(jobdata);
         }
         cmd = new SiegeCommand(this,"msi");
         new SiegeCommand(this,"siege");
@@ -239,6 +248,30 @@ public class SiegeData implements Listener {
 
         return list;
     }
+
+    public ArrayList<String> joblist() {
+
+        ArrayList<String> list = new ArrayList<>();
+
+        File folder = new File(plugin.getDataFolder(), File.separator + "Jobs");
+
+        if(!folder.exists()){
+            folder.mkdir();
+        }
+
+        File[] files = folder.listFiles();  // (a)
+        if (files != null) {
+            for (File f : files) {
+                if (f.isFile()){  // (c)
+                    String filename = f.getName();
+                    list.add(remove_yml(filename));
+                }
+            }
+        }
+
+        return list;
+    }
+
 
     public String remove_yml(String filename){
         if(filename.substring(0,1).equalsIgnoreCase(".")){
@@ -443,19 +476,23 @@ public class SiegeData implements Listener {
         p.teleport(getArena(arenaname).lobbyloc);
         p.getInventory().clear();
         addGameItem(p);
+        job.selectjob.put(p.getUniqueId(),"bommer");
     }
 
     ItemStack leave = null;
     ItemStack startvote = null;
+    ItemStack jobset = null;
 
     public void addGameItem(Player p){
         p.getInventory().setItem(0,startvote);
+        p.getInventory().setItem(2,jobset);
         p.getInventory().setItem(8,leave);
     }
 
     private void initGameItem(){
         leave = createUnbitem("§cゲームを抜ける",new String[]{"§eクリックでゲームを抜けます"},Material.DARK_OAK_DOOR_ITEM,0,false);
         startvote = createUnbitem("§aゲーム開始に投票",new String[]{"§eクリックでゲームを開始に投票します"},Material.DIAMOND,0,false);
+        jobset = createUnbitem("§e役職をセット",new String[]{"§eクリックで役職をセットします"},Material.INK_SACK,11,false);
     }
 
     @EventHandler
@@ -479,7 +516,7 @@ public class SiegeData implements Listener {
     @EventHandler
     public void onDropItem(PlayerDropItemEvent e){
         if(e.getItemDrop()!=null) {
-            if (e.getItemDrop().getItemStack().equals(startvote)||e.getItemDrop().getItemStack().equals(leave)) {
+            if (e.getItemDrop().getItemStack().equals(startvote)||e.getItemDrop().getItemStack().equals(leave)||e.getItemDrop().getItemStack().equals(jobset)) {
                 e.setCancelled(true);
             }
         }
@@ -493,7 +530,7 @@ public class SiegeData implements Listener {
                 e.setCancelled(true);
                 //スタートに投票
                 SiegeArena arena = getArena(getStats(player.getUniqueId().toString()).getJoinarena());
-                if(arena.team1.playerlist.size()+arena.team2.playerlist.size()<2){ //6
+                if(arena.team1.playerlist.size()+arena.team2.playerlist.size()<min_player){
                     showMessage(player.getUniqueId().toString(),"§cプレイヤー数が足りないためスタートに投票できません!");
                     return;
                 }
@@ -513,6 +550,8 @@ public class SiegeData implements Listener {
                 e.setCancelled(true);
                 Bukkit.dispatchCommand(player,"ewarp minigame_lobby");
                 Bukkit.dispatchCommand(player,"msi leave");
+            }else if(player.getInventory().getItemInMainHand().equals(jobset)){
+                Bukkit.dispatchCommand(player,"msi jobset");
             }
         }
     }

@@ -12,6 +12,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockExplodeEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
@@ -478,10 +479,21 @@ public class SiegeArena implements Listener {
     }
 
     @EventHandler
+    public void onBlockExpolode(BlockExplodeEvent e){
+        if (nowgame) {
+            if (e.getBlock().getLocation().getWorld().getName().equalsIgnoreCase(worldname)) {
+                if(!placeblocklist.contains(e.getBlock())){
+                    e.setCancelled(true);
+                }
+            }
+        }
+    }
+
+    @EventHandler
     public void onBlockBreaked(BlockBreakEvent e) {
         if (nowgame) {
-            if (team1.playerlist.contains(e.getPlayer().getUniqueId()) || team2.playerlist.contains(e.getPlayer().getUniqueId())) {
-                if (e.getBlock().getLocation().getWorld().getName().equalsIgnoreCase(worldname)) {
+            if (e.getBlock().getLocation().getWorld().getName().equalsIgnoreCase(worldname)) {
+                if (team1.playerlist.contains(e.getPlayer().getUniqueId()) || team2.playerlist.contains(e.getPlayer().getUniqueId())) {
                     if (placeblocklist.contains(e.getBlock())) {
                         if (stoneblocks.contains(e.getBlock().getType()) || dirtblocks.contains(e.getBlock().getType()) || woodblocks.contains(e.getBlock().getType())) {
                             if (stoneblocks.contains(e.getBlock().getType()) && checkPickaxe(e.getPlayer().getInventory().getItemInMainHand().getType())) {

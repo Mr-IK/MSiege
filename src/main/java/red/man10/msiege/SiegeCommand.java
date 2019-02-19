@@ -4,11 +4,13 @@ import org.bukkit.Bukkit;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.block.Action;
+import org.bukkit.inventory.ItemStack;
 import red.man10.msiege.util.InventoryAPI;
 
 import java.util.*;
@@ -22,6 +24,7 @@ public class SiegeCommand implements CommandExecutor,Listener{
     HashMap<UUID,SiegeCard> cardsetup = new HashMap<>();
     HashMap<UUID,String> arenasetups = new HashMap<>();
     HashMap<UUID,CraftData> craftsetup = new HashMap<>();
+    HashMap<UUID,List<ItemStack>> jobsetup = new HashMap<>();
 
     public SiegeCommand(SiegeData data,String cmd){
         this.data = data;
@@ -160,6 +163,10 @@ public class SiegeCommand implements CommandExecutor,Listener{
                     p.sendMessage("§c-------------Shop関連-------------");
                     p.sendMessage("§c/" + cmd + " shoprel : shopをリロードします。");
                     p.sendMessage("§c/" + cmd + " addshop [name] [buy] : shopの品を追加します");
+                    p.sendMessage("§c-------------Job関連-------------");
+                    p.sendMessage("§c/" + cmd + " createjob [name] : jobのセットアップを行います");
+                    p.sendMessage("§c/" + cmd + " additemjob [name] : jobにアイテムを追加します");
+                    p.sendMessage("§c/" + cmd + " savejob [name] : jobをセーブします");
                     p.sendMessage("§c-------------Craft関連-------------");
                     p.sendMessage("§c/" + cmd + " craftnew [name] : craftをセットアップします");
                     p.sendMessage("§c/" + cmd + " craft setitem: craftの発動アイテムをセットします");
@@ -222,6 +229,15 @@ public class SiegeCommand implements CommandExecutor,Listener{
                 data.plugin.reloadConfig();
                 data.plugin.config = data.plugin.getConfig();
                 data.showMessage(p.getUniqueId().toString(),"§ashopを再読み込みしました。");
+            }else if(args[0].equalsIgnoreCase("jobset")){
+                for(String str:data.list()){
+                    if(data.getArena(str).team1.playerlist.contains(p.getUniqueId())||data.getArena(str).team2.playerlist.contains(p.getUniqueId())){
+                        data.job.jobSelectInvOpen(p);
+                        return true;
+                    }
+                }
+                data.showMessage(p.getUniqueId().toString(), "§aあなたはどこにも参加していません");
+                return true;
             }
         }else if(args.length == 2){
             if(args[0].equalsIgnoreCase("create")){
@@ -520,6 +536,47 @@ public class SiegeCommand implements CommandExecutor,Listener{
                     }
                     data.showMessage(p.getUniqueId().toString(), "§aカードを再読み込みしました。");
                 }
+            }else if(args[0].equalsIgnoreCase("jobset")){
+                for(String str:data.list()){
+                    if(data.getArena(str).team1.playerlist.contains(p.getUniqueId())||data.getArena(str).team2.playerlist.contains(p.getUniqueId())){
+                        data.job.selectjob.put(p.getUniqueId(),args[1]);
+                        data.showMessage(p.getUniqueId().toString(), "§a役職をセットしました。");
+                        return true;
+                    }
+                }
+                data.showMessage(p.getUniqueId().toString(), "§aあなたはどこにも参加していません");
+                return true;
+            }else if(args[0].equalsIgnoreCase("createjob")){
+                if (!p.hasPermission("siege.setup")) {
+                    p.sendMessage(data.plugin.getPrefix() + "§cあなたには権限がありません！");
+                    return true;
+                }
+                jobsetup.put(p.getUniqueId(),new ArrayList<>());
+                data.showMessage(p.getUniqueId().toString(), "§ajob作成を開始しました！");
+                return true;
+            }else if(args[0].equalsIgnoreCase("additemjob")){
+                if(!jobsetup.containsKey(p.getUniqueId())){
+                    data.showMessage(p.getUniqueId().toString(),"§cセットアップ/再設定が開始されていません！ もしかして: /"+cmd+" createjob");
+                    return true;
+                }
+                if(p.getInventory().getItemInMainHand()==null){
+                    data.showMessage(p.getUniqueId().toString(), "§cアイテムを持ってください");
+                    return true;
+                }
+                List<ItemStack> list = jobsetup.get(p.getUniqueId());
+                list.add(p.getInventory().getItemInMainHand());
+                jobsetup.put(p.getUniqueId(),list);
+                data.showMessage(p.getUniqueId().toString(), "§ajobにアイテムを追加しました");
+                return true;
+            }else if(args[0].equalsIgnoreCase("savejob")){
+                if(!jobsetup.containsKey(p.getUniqueId())){
+                    data.showMessage(p.getUniqueId().toString(),"§cセットアップ/再設定が開始されていません！ もしかして: /"+cmd+" createjob");
+                    return true;
+                }
+                JobData jdata = new JobData(data.job,args[1],jobsetup.get(p.getUniqueId()));
+                data.job.joblist.add(jdata);
+                data.showMessage(p.getUniqueId().toString(), "§ajobをセーブしました");
+                return true;
             }
         }else if(args.length == 3){
             if(args[0].equalsIgnoreCase("card")){
